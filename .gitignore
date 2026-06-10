@@ -1,0 +1,8 @@
+# Ignorar dependencias de ambas carpetas
+backend/node_modules/
+frontend/node_modules/
+
+# Ignorar archivos de producción y variables de entorno
+frontend/dist/
+frontend/.vite/
+.env

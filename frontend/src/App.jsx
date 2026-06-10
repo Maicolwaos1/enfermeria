@@ -1,11 +1,14 @@
-function App() {
-  return (
-    <div className="contenedor">
-      <h1 className="titulo">¡Frontend con React Listo!</h1>
-      <p>Ahora estás usando React puro con CSS tradicional, sin Tailwind.</p>
-      <button className="boton-estilo">Botón de Prueba</button>
-    </div>
-  )
-}
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import Login from './Login';
+import Registro from './Registro';
 
-export default App
+export default function App() {
+  return (
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<Login />} />
+        <Route path="/registro" element={<Registro />} />
+      </Routes>
+    </BrowserRouter>
+  );
+}

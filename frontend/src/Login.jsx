@@ -41,7 +41,7 @@ export default function Login() {
       localStorage.setItem('nombreEnfermera', datos.nombre || usuario);
       navigate('/dashboard');
     } catch (error) {
-      setMensajeError('No se pudo conectar con el servidor');
+      setMensajeError('Usuario o contraseña incorrecta');
     } finally {
       setCargando(false);
     }

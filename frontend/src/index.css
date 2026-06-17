@@ -65,6 +65,13 @@ body {
   font-weight: 600;
 }
 
+.success-text {
+  color: #1a8f3c;
+  margin-top: 15px;
+  font-size: 14px;
+  font-weight: 600;
+}
+
 .login-link {
   margin-top: 20px;
   color: #007BFF;

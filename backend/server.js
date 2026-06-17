@@ -1,26 +1,37 @@
+// Carga las variables del archivo .env (datos de la BD, puerto, etc.)
+require('dotenv').config();
+
 const express = require('express');
 const mysql = require('mysql2');
 const bcrypt = require('bcrypt');
+const cors = require('cors');
 
 const app = express();
-const PORT = 3000;
+const PORT = process.env.PORT || 3000;
+
+// Permite que el frontend (React/Vite) pueda llamar a estos endpoints
+app.use(cors());
 
 // Esto le dice a Express que entienda JSON en las peticiones
 app.use(express.json());
 
 // --- Conexión a la base de datos ---
-const db = mysql.createConnection({
-    host: 'localhost',
-    user: 'root',        // Cambia esto si tu usuario de MySQL es diferente
-    password: '',        // Pon aquí tu contraseña de MySQL
-    database: 'clinica_db'
+// Usamos un "pool" en lugar de una sola conexión: maneja varias peticiones
+// a la vez y se reconecta solo si la conexión se cae.
+const db = mysql.createPool({
+    host: process.env.DB_HOST,
+    user: process.env.DB_USER,
+    password: process.env.DB_PASSWORD,
+    database: process.env.DB_NAME
 });
 
-db.connect((error) => {
+// Probamos la conexión una vez al arrancar (solo para avisar en consola)
+db.getConnection((error, conexion) => {
     if (error) {
         console.log('Error al conectar a la base de datos:', error.message);
     } else {
         console.log('Conectado a la base de datos MySQL');
+        conexion.release(); // devolvemos la conexión al pool
     }
 });
 
@@ -33,21 +44,21 @@ app.get('/', (req, res) => {
 // Recibe: nombre, usuario, contraseña, correo
 // Guarda los datos en la tabla enfermeras (con la contraseña encriptada)
 app.post('/registro', async (req, res) => {
-    const { nombre, usuario, contraseña, correo } = req.body;
+    const { nombre, usuario, password, correo } = req.body;
 
     // Verificar que vengan todos los datos
-    if (!nombre || !usuario || !contraseña || !correo) {
+    if (!nombre || !usuario || !password || !correo) {
         return res.status(400).json({ mensaje: 'Todos los campos son obligatorios' });
     }
 
     try {
         // Encriptar la contraseña antes de guardarla (Tarea 3: bcrypt)
         // El número 10 es el "nivel de seguridad" — 10 es el estándar
-        const contraseñaEncriptada = await bcrypt.hash(contraseña, 10);
+        const passwordEncriptado = await bcrypt.hash(password, 10);
 
-        const sql = 'INSERT INTO enfermeras (nombre, usuario, contraseña, correo) VALUES (?, ?, ?, ?)';
+        const sql = 'INSERT INTO enfermeras (nombre, usuario, password, correo) VALUES (?, ?, ?, ?)';
 
-        db.query(sql, [nombre, usuario, contraseñaEncriptada, correo], (error) => {
+        db.query(sql, [nombre, usuario, passwordEncriptado, correo], (error) => {
             if (error) {
                 // Si el usuario o correo ya existen, MySQL manda un error especial
                 if (error.code === 'ER_DUP_ENTRY') {
@@ -68,9 +79,9 @@ app.post('/registro', async (req, res) => {
 // Recibe: usuario y contraseña
 // Verifica que existan en la BD y que la contraseña sea correcta
 app.post('/login', async (req, res) => {
-    const { usuario, contraseña } = req.body;
+    const { usuario, password } = req.body;
 
-    if (!usuario || !contraseña) {
+    if (!usuario || !password) {
         return res.status(400).json({ mensaje: 'Usuario y contraseña son obligatorios' });
     }
 
@@ -89,9 +100,9 @@ app.post('/login', async (req, res) => {
         const enfermera = resultados[0];
 
         // Comparar la contraseña que escribió el usuario con la encriptada en la BD
-        const contraseñaCorrecta = await bcrypt.compare(contraseña, enfermera.contraseña);
+        const passwordCorrecto = await bcrypt.compare(password, enfermera.password);
 
-        if (!contraseñaCorrecta) {
+        if (!passwordCorrecto) {
             return res.status(401).json({ mensaje: 'Usuario o contraseña incorrectos' });
         }
 

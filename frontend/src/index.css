@@ -79,6 +79,29 @@ body {
   font-size: 15px;
 }
 
+.resultado-paciente {
+  width: 100%;
+  margin-top: 20px;
+  padding: 15px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  background-color: #f9f9f9;
+  text-align: center;
+  box-sizing: border-box;
+}
+
+.expediente-datos {
+  width: 100%;
+  text-align: left;
+  line-height: 1.7;
+}
+
+.lista-consultas {
+  width: 100%;
+  text-align: left;
+  padding-left: 20px;
+}
+
 .registro-container {
   display: flex;
   flex-direction: column;

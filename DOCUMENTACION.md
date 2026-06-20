@@ -58,6 +58,16 @@ CREATE TABLE IF NOT EXISTS enfermeras (
   password VARCHAR(255) NOT NULL,   -- se guarda encriptada con bcrypt
   correo VARCHAR(100) NOT NULL UNIQUE
 );
+
+-- Tabla de pacientes (Sprint 3)
+CREATE TABLE IF NOT EXISTS pacientes (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  nombre VARCHAR(100) NOT NULL,
+  matricula VARCHAR(20) NOT NULL UNIQUE,
+  fecha_nacimiento DATE,
+  correo VARCHAR(100),
+  telefono VARCHAR(20)
+);
 ```
 
 > **¿Ya creaste la tabla con la columna `contraseña` (con ñ)?**
@@ -112,6 +122,28 @@ Verifica las credenciales y devuelve el nombre de la enfermera.
 | 401 | Usuario o contraseña incorrectos |
 | 500 | Error del servidor |
 
+### `GET /api/pacientes/:matricula`  *(Sprint 3)*
+Busca un paciente por su matrícula.
+
+**Respuestas:**
+| Código | Significado |
+|--------|-------------|
+| 200 | Devuelve los datos del paciente |
+| 404 | Paciente no encontrado |
+| 500 | Error del servidor |
+
+### `GET /api/pacientes/:id/expediente`  *(Sprint 3)*
+Devuelve los datos del paciente y su historial de consultas.
+
+**Respuesta (200):**
+```json
+{
+  "paciente": { "id": 1, "nombre": "Juan Pérez", "matricula": "UP240001", "...": "..." },
+  "consultas": []
+}
+```
+> El arreglo `consultas` viene vacío hasta el Sprint 5, cuando se cree la tabla de consultas.
+
 ---
 
 ## 5. Pantallas del Frontend (conexión con el backend)
@@ -120,10 +152,14 @@ Verifica las credenciales y devuelve el nombre de la enfermera.
 |------|----------|----------|
 | `/` | Login | Llama a `POST /login`; si es correcto guarda el nombre y va a `/dashboard` |
 | `/registro` | Registro | Llama a `POST /registro`; al registrar redirige al Login |
-| `/dashboard` | Dashboard | Muestra el saludo y el botón "Cerrar sesión" |
+| `/dashboard` | Dashboard | Saludo, botón "Buscar paciente" y "Cerrar sesión" |
+| `/buscar` | Buscar Paciente | Llama a `GET /api/pacientes/:matricula`; muestra el resultado o "No encontrado" |
+| `/expediente/:id` | Expediente | Llama a `GET /api/pacientes/:id/expediente`; muestra datos e historial |
+
+**Flujo:** Login → Dashboard → "Buscar paciente" → resultado → "Ver expediente".
 
 **Manejo de sesión:** al iniciar sesión se guarda `nombreEnfermera` en
-`localStorage`. El Dashboard lo lee para el saludo; si no existe, redirige al Login.
+`localStorage`. Las pantallas internas lo leen; si no existe, redirigen al Login.
 Al cerrar sesión se borra y se regresa al Login.
 
 La URL del backend está centralizada en [frontend/src/api.js](frontend/src/api.js).
@@ -165,8 +201,9 @@ npm run dev          # inicia en http://localhost:5173
 
 ---
 
-## 7. Estado del Sprint 2
+## 7. Estado de los Sprints
 
+### Sprint 2 — Login y Registro ✅
 | # | Tarea | Estado |
 |---|-------|--------|
 | 1 | Endpoint `POST /registro` | ✅ Hecho |
@@ -177,16 +214,26 @@ npm run dev          # inicia en http://localhost:5173
 | 6 | Pantalla Dashboard con saludo y botón "Cerrar sesión" | ✅ Hecho |
 | 7 | Cierre de sesión (borra datos y vuelve al Login) | ✅ Hecho |
 
+### Sprint 3 — Buscar Paciente y Ver Expediente ✅
+| # | Tarea | Estado |
+|---|-------|--------|
+| 1 | Crear tabla `pacientes` en la BD | ✅ Hecho |
+| 2 | Endpoint `GET /api/pacientes/:matricula` | ✅ Hecho |
+| 3 | Endpoint `GET /api/pacientes/:id/expediente` | ✅ Hecho |
+| 4 | Pantalla de búsqueda | ✅ Hecho |
+| 5 | Conectar búsqueda al endpoint (resultado / "No encontrado") | ✅ Hecho |
+| 6 | Pantalla de expediente (datos + historial) | ✅ Hecho |
+
 ---
 
-## 8. Próximos Pasos (Sprint 3)
+## 8. Próximos Pasos (Sprint 4)
 
-Búsqueda de pacientes por matrícula y vista de expediente:
-1. Crear la tabla `pacientes` en la BD.
-2. Endpoint `GET /api/pacientes/:matricula`.
-3. Endpoint `GET /api/pacientes/:id/expediente`.
-4. Pantallas de búsqueda y de expediente en el frontend, conectadas a esos endpoints.
+Registro manual de pacientes nuevos y visualización de alergias:
+1. Agregar campos de alergias y enfermedades crónicas a la tabla `pacientes`.
+2. Endpoint `POST /api/pacientes` — guardar paciente nuevo.
+3. Endpoint `PATCH /api/pacientes/:id/alergias` — agregar/editar alergias.
+4. Formulario de registro manual y resaltado de alergias en rojo en el expediente.
 
-> Nota: a partir del Sprint 3, la planeación usa el prefijo `/api/` en las rutas.
-> Conviene unificar las rutas actuales (`/registro`, `/login`) bajo ese mismo prefijo
-> (`/api/registro`, `/api/login`) para mantener consistencia.
+> Nota: el Sprint 3 usa el prefijo `/api/` (como `/api/pacientes`). Las rutas viejas
+> (`/registro`, `/login`) siguen sin prefijo. Conviene unificarlas bajo `/api/`
+> (`/api/registro`, `/api/login`) en algún momento para mantener consistencia.

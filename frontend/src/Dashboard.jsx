@@ -32,7 +32,16 @@ export default function Dashboard() {
           Has iniciado sesión correctamente.
         </p>
 
-        <button className="login-button" type="button" onClick={handleCerrarSesion}>
+        <button className="login-button" type="button" onClick={() => navigate('/buscar')}>
+          Buscar paciente
+        </button>
+
+        <button
+          className="login-button"
+          type="button"
+          onClick={handleCerrarSesion}
+          style={{ backgroundColor: '#6c757d', marginTop: '10px' }}
+        >
           Cerrar sesión
         </button>
       </div>

@@ -66,7 +66,7 @@ Sistema web para la gestión de enfermería escolar. Permite a las enfermeras au
 
 ---
 
-## Roadmap — 8 Sprints
+## Roadmap — 9 Sprints
 
 | Sprint | Semana | Objetivo Principal | Responsables |
 |--------|--------|--------------------|--------------|
@@ -78,6 +78,7 @@ Sistema web para la gestión de enfermería escolar. Permite a las enfermeras au
 | Sprint 6 | Sem. 6 | Control de inventario: ver, agregar y editar medicamentos | Fabián + Rodrigo |
 | Sprint 7 | Sem. 7 | Descuento automático de medicamentos recetados al guardar consulta | Fabián + Rodrigo |
 | Sprint 8 | Sem. 8 | Alertas de stock bajo, pruebas finales y ajustes de diseño | Fabián + Rodrigo |
+| Sprint 9 | Sem. 9 | Seguridad: autenticación con JWT y protección de rutas | Fabián + Rodrigo |
 
 > Los Story Points representan el esfuerzo estimado de cada tarea en una escala del 1 al 8.
 
@@ -223,6 +224,23 @@ Sistema web para la gestión de enfermería escolar. Permite a las enfermeras au
 
 ---
 
+### Sprint 9 — Seguridad con JWT
+
+**Objetivo:** El login entrega un *token* (JWT) y los endpoints quedan protegidos: solo una enfermera con sesión válida puede acceder a pacientes, consultas e inventario.
+
+| # | Tarea | Responsable | RF/HU | Pts |
+|---|-------|-------------|-------|-----|
+| 1 | Instalar `jsonwebtoken` y agregar un secreto (`JWT_SECRET`) en el archivo `.env`. | Fabián | RNF04 | 2 |
+| 2 | Al iniciar sesión correctamente, generar y devolver un token JWT con el id y nombre de la enfermera. | Fabián | HU01 / RNF04 | 4 |
+| 3 | Crear un *middleware* que verifique el token y proteja los endpoints (pacientes, consultas, inventario). | Fabián | RNF04 | 5 |
+| 4 | Guardar el token en el frontend al iniciar sesión y enviarlo en cada petición (cabecera `Authorization`). | Rodrigo | HU01 / RNF04 | 4 |
+| 5 | Proteger las rutas del frontend: si no hay token válido, redirigir al Login (componente `RutaProtegida`). | Rodrigo | HU01 | 3 |
+| 6 | Manejar el token expirado/ inválido: cerrar sesión automáticamente y avisar al usuario. | Rodrigo | HU01 / RNF04 | 3 |
+
+**Resumen:** Fabián 11 pts · Rodrigo 10 pts · **Total 21 pts**
+
+---
+
 ## Resumen Global de Story Points
 
 | Sprint | Total de Pts |
@@ -235,7 +253,8 @@ Sistema web para la gestión de enfermería escolar. Permite a las enfermeras au
 | Sprint 6 | 22 |
 | Sprint 7 | 21 |
 | Sprint 8 | 26 |
-| **Total** | **190** |
+| Sprint 9 | 21 |
+| **Total** | **211** |
 
 ---
 
@@ -246,5 +265,36 @@ Sistema web para la gestión de enfermería escolar. Permite a las enfermeras au
 | Backend | Node.js + Express |
 | Frontend | React + Tailwind CSS |
 | Base de Datos | SQL (relacional) |
-| Seguridad | bcrypt (contraseñas), HTTPS |
+| Seguridad | bcrypt (contraseñas), JWT (sesiones), HTTPS, variables de entorno (.env) |
 | Herramientas BD | TablePlus / DBeaver |
+
+---
+
+## Ideas y Mejoras Futuras (opcionales)
+
+Lista de mejoras para subir la calidad del proyecto y para la presentación final.
+No son obligatorias; se pueden tomar según el tiempo disponible.
+
+### Funcionalidades
+- **Roles de usuario** (enfermera vs. administrador): solo el admin puede dar de alta nuevas enfermeras (refuerza RF02).
+- **Editar / dar de baja pacientes** (no solo crear y consultar).
+- **Reportes en el Dashboard:** consultas del día, medicamentos más usados, total de pacientes atendidos.
+- **Exportar el expediente a PDF** para imprimir o compartir.
+- **Historial de quién hizo cada acción** (auditoría): qué enfermera registró cada consulta y a qué hora.
+- **Paginación y filtros** en la búsqueda de pacientes y en el inventario.
+- **Recuperación de contraseña** por correo.
+
+### Estilos y experiencia de usuario (UI/UX)
+- **Migrar a Tailwind CSS** de forma completa (hoy hay CSS a mano) para un diseño consistente y responsivo.
+- **Librería de componentes** (shadcn/ui o Material UI) para formularios, tablas y botones uniformes.
+- **Notificaciones tipo toast** (react-hot-toast) para éxito/error en vez de texto plano.
+- **Tema visual de clínica:** paleta de colores suave, ícono/logo, tipografía legible.
+- **Alergias y enfermedades crónicas en rojo** bien resaltadas en el expediente (RF06).
+- **Indicadores de carga** (spinners) y estados vacíos amigables ("Aún no hay consultas").
+- **Modo responsivo real** probado en tablet (RNF02).
+
+### Tecnologías / herramientas
+- **TanStack Query (React Query)** para manejar las llamadas al backend (carga, errores, caché).
+- **Zod o express-validator** para validar datos de forma limpia en el servidor.
+- **Jest + Supertest** para pruebas automáticas de los endpoints (apoya el Sprint 8).
+- **Despliegue con HTTPS:** backend en Render/Railway y frontend en Vercel (cumple RNF04).

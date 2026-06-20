@@ -110,6 +110,65 @@ app.post('/login', async (req, res) => {
     });
 });
 
+// ============================================================
+//  SPRINT 3 — Buscar paciente y ver expediente
+// ============================================================
+
+// --- Tarea 2: Buscar un paciente por su matrícula ---
+// GET /api/pacientes/:matricula
+app.get('/api/pacientes/:matricula', (req, res) => {
+    const { matricula } = req.params;
+
+    const sql = 'SELECT * FROM pacientes WHERE matricula = ?';
+
+    db.query(sql, [matricula], (error, resultados) => {
+        if (error) {
+            return res.status(500).json({ mensaje: 'Error en el servidor' });
+        }
+
+        // Si no se encontró ningún paciente con esa matrícula
+        if (resultados.length === 0) {
+            return res.status(404).json({ mensaje: 'Paciente no encontrado' });
+        }
+
+        res.status(200).json(resultados[0]);
+    });
+});
+
+// --- Tarea 3: Ver el expediente de un paciente (datos + historial) ---
+// GET /api/pacientes/:id/expediente
+app.get('/api/pacientes/:id/expediente', (req, res) => {
+    const { id } = req.params;
+
+    const sqlPaciente = 'SELECT * FROM pacientes WHERE id = ?';
+
+    db.query(sqlPaciente, [id], (error, pacientes) => {
+        if (error) {
+            return res.status(500).json({ mensaje: 'Error en el servidor' });
+        }
+
+        if (pacientes.length === 0) {
+            return res.status(404).json({ mensaje: 'Paciente no encontrado' });
+        }
+
+        const paciente = pacientes[0];
+
+        // Historial de consultas. La tabla "consultas" se crea hasta el Sprint 5,
+        // así que por ahora regresamos una lista vacía si todavía no existe.
+        const sqlConsultas =
+            'SELECT * FROM consultas WHERE id_paciente = ? ORDER BY hora_entrada DESC';
+
+        db.query(sqlConsultas, [id], (errorConsultas, consultas) => {
+            // Si la tabla aún no existe (Sprint 5), devolvemos historial vacío
+            if (errorConsultas) {
+                return res.status(200).json({ paciente, consultas: [] });
+            }
+
+            res.status(200).json({ paciente, consultas });
+        });
+    });
+});
+
 // --- Iniciar el servidor ---
 app.listen(PORT, () => {
     console.log(`Servidor corriendo en http://localhost:${PORT}`);

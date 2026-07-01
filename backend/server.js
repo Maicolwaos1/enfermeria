@@ -169,6 +169,87 @@ app.get('/api/pacientes/:id/expediente', (req, res) => {
     });
 });
 
+// ============================================================
+//  SPRINT 4 — Registrar pacientes nuevos y ver alergias
+// ============================================================
+
+// --- Tarea 2: Registrar un paciente nuevo manualmente ---
+// POST /api/pacientes
+// Recibe: nombre, matricula, fecha_nacimiento, correo, telefono,
+//         alergias, enfermedades_cronicas
+app.post('/api/pacientes', (req, res) => {
+    const {
+        nombre,
+        matricula,
+        fecha_nacimiento,
+        correo,
+        telefono,
+        alergias,
+        enfermedades_cronicas,
+    } = req.body;
+
+    // Nombre y matrícula son obligatorios; el resto puede quedar vacío
+    if (!nombre || !matricula) {
+        return res.status(400).json({ mensaje: 'El nombre y la matrícula son obligatorios' });
+    }
+
+    const sql = `
+        INSERT INTO pacientes
+            (nombre, matricula, fecha_nacimiento, correo, telefono, alergias, enfermedades_cronicas)
+        VALUES (?, ?, ?, ?, ?, ?, ?)
+    `;
+
+    // Convertimos los campos vacíos a NULL para no guardar cadenas en blanco
+    const valores = [
+        nombre,
+        matricula,
+        fecha_nacimiento || null,
+        correo || null,
+        telefono || null,
+        alergias || null,
+        enfermedades_cronicas || null,
+    ];
+
+    db.query(sql, valores, (error, resultado) => {
+        if (error) {
+            // Si la matrícula ya existe, MySQL manda este error especial
+            if (error.code === 'ER_DUP_ENTRY') {
+                return res.status(400).json({ mensaje: 'Ya existe un paciente con esa matrícula' });
+            }
+            return res.status(500).json({ mensaje: 'Error al registrar el paciente' });
+        }
+
+        // Devolvemos el id nuevo para que el frontend pueda ir al expediente
+        res.status(201).json({
+            mensaje: 'Paciente registrado exitosamente',
+            id: resultado.insertId,
+        });
+    });
+});
+
+// --- Tarea 3: Agregar o editar las alergias de un paciente ---
+// PATCH /api/pacientes/:id/alergias
+// Recibe: alergias y (opcionalmente) enfermedades_cronicas
+app.patch('/api/pacientes/:id/alergias', (req, res) => {
+    const { id } = req.params;
+    const { alergias, enfermedades_cronicas } = req.body;
+
+    const sql = 'UPDATE pacientes SET alergias = ?, enfermedades_cronicas = ? WHERE id = ?';
+
+    db.query(sql, [alergias || null, enfermedades_cronicas || null, id], (error, resultado) => {
+        if (error) {
+            return res.status(500).json({ mensaje: 'Error al actualizar las alergias' });
+        }
+
+        // Si no se actualizó ninguna fila, el paciente no existe
+        if (resultado.affectedRows === 0) {
+            return res.status(404).json({ mensaje: 'Paciente no encontrado' });
+        }
+
+        res.status(200).json({ mensaje: 'Alergias actualizadas correctamente' });
+    });
+});
+
 // --- Iniciar el servidor ---
 app.listen(PORT, () => {
     console.log(`Servidor corriendo en http://localhost:${PORT}`);

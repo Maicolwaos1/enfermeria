@@ -59,16 +59,25 @@ CREATE TABLE IF NOT EXISTS enfermeras (
   correo VARCHAR(100) NOT NULL UNIQUE
 );
 
--- Tabla de pacientes (Sprint 3)
+-- Tabla de pacientes (Sprint 3, ampliada en el Sprint 4)
 CREATE TABLE IF NOT EXISTS pacientes (
   id INT AUTO_INCREMENT PRIMARY KEY,
   nombre VARCHAR(100) NOT NULL,
   matricula VARCHAR(20) NOT NULL UNIQUE,
   fecha_nacimiento DATE,
   correo VARCHAR(100),
-  telefono VARCHAR(20)
+  telefono VARCHAR(20),
+  alergias TEXT,                -- Sprint 4
+  enfermedades_cronicas TEXT    -- Sprint 4
 );
 ```
+
+> **¿Ya tenías la tabla `pacientes` del Sprint 3?** Agrega las dos columnas nuevas con:
+> ```sql
+> ALTER TABLE pacientes
+>   ADD COLUMN alergias TEXT,
+>   ADD COLUMN enfermedades_cronicas TEXT;
+> ```
 
 > **¿Ya creaste la tabla con la columna `contraseña` (con ñ)?**
 > Renómbrala con: `ALTER TABLE enfermeras CHANGE contraseña password VARCHAR(255) NOT NULL;`
@@ -144,6 +153,48 @@ Devuelve los datos del paciente y su historial de consultas.
 ```
 > El arreglo `consultas` viene vacío hasta el Sprint 5, cuando se cree la tabla de consultas.
 
+### `POST /api/pacientes`  *(Sprint 4)*
+Registra manualmente un paciente nuevo. `nombre` y `matricula` son obligatorios; el
+resto de los campos es opcional (se guarda `NULL` si vienen vacíos).
+
+**Body (JSON):**
+```json
+{
+  "nombre": "Juan Pérez",
+  "matricula": "UP240001",
+  "fecha_nacimiento": "2005-03-14",
+  "correo": "juan@ejemplo.com",
+  "telefono": "4491234567",
+  "alergias": "Penicilina",
+  "enfermedades_cronicas": "Asma"
+}
+```
+
+**Respuestas:**
+| Código | Significado |
+|--------|-------------|
+| 201 | Paciente registrado (devuelve el `id` nuevo) |
+| 400 | Faltan nombre/matrícula o la matrícula ya existe |
+| 500 | Error del servidor |
+
+### `PATCH /api/pacientes/:id/alergias`  *(Sprint 4)*
+Agrega o edita las alergias y enfermedades crónicas de un paciente existente.
+
+**Body (JSON):**
+```json
+{
+  "alergias": "Penicilina, nueces",
+  "enfermedades_cronicas": "Asma"
+}
+```
+
+**Respuestas:**
+| Código | Significado |
+|--------|-------------|
+| 200 | Alergias actualizadas correctamente |
+| 404 | Paciente no encontrado |
+| 500 | Error del servidor |
+
 ---
 
 ## 5. Pantallas del Frontend (conexión con el backend)
@@ -153,8 +204,9 @@ Devuelve los datos del paciente y su historial de consultas.
 | `/` | Login | Llama a `POST /login`; si es correcto guarda el nombre y va a `/dashboard` |
 | `/registro` | Registro | Llama a `POST /registro`; al registrar redirige al Login |
 | `/dashboard` | Dashboard | Saludo, botón "Buscar paciente" y "Cerrar sesión" |
-| `/buscar` | Buscar Paciente | Llama a `GET /api/pacientes/:matricula`; muestra el resultado o "No encontrado" |
-| `/expediente/:id` | Expediente | Llama a `GET /api/pacientes/:id/expediente`; muestra datos e historial |
+| `/buscar` | Buscar Paciente | Llama a `GET /api/pacientes/:matricula`; muestra el resultado o "No encontrado" (con botón para registrar uno nuevo) |
+| `/pacientes/nuevo` | Registrar Paciente | Llama a `POST /api/pacientes`; al guardar redirige al expediente del paciente nuevo |
+| `/expediente/:id` | Expediente | Llama a `GET /api/pacientes/:id/expediente`; muestra datos, alergias resaltadas e historial |
 
 **Flujo:** Login → Dashboard → "Buscar paciente" → resultado → "Ver expediente".
 
@@ -224,15 +276,26 @@ npm run dev          # inicia en http://localhost:5173
 | 5 | Conectar búsqueda al endpoint (resultado / "No encontrado") | ✅ Hecho |
 | 6 | Pantalla de expediente (datos + historial) | ✅ Hecho |
 
+### Sprint 4 — Registrar Pacientes Nuevos y Ver Alergias ✅
+| # | Tarea | Estado |
+|---|-------|--------|
+| 1 | Agregar campos `alergias` y `enfermedades_cronicas` a la tabla `pacientes` | ✅ Hecho |
+| 2 | Endpoint `POST /api/pacientes` | ✅ Hecho |
+| 3 | Endpoint `PATCH /api/pacientes/:id/alergias` | ✅ Hecho |
+| 4 | Formulario de registro manual (`/pacientes/nuevo`) | ✅ Hecho |
+| 5 | Conectar formulario al endpoint y redirigir al expediente | ✅ Hecho |
+| 6 | Mostrar alergias en recuadro rojo en el expediente | ✅ Hecho |
+
 ---
 
-## 8. Próximos Pasos (Sprint 4)
+## 8. Próximos Pasos (Sprint 5)
 
-Registro manual de pacientes nuevos y visualización de alergias:
-1. Agregar campos de alergias y enfermedades crónicas a la tabla `pacientes`.
-2. Endpoint `POST /api/pacientes` — guardar paciente nuevo.
-3. Endpoint `PATCH /api/pacientes/:id/alergias` — agregar/editar alergias.
-4. Formulario de registro manual y resaltado de alergias en rojo en el expediente.
+Registrar consultas (entrada, atención, salida) y actualizar el expediente:
+1. Crear tabla `consultas` en la BD (id, id_paciente, id_enfermera, hora_entrada,
+   hora_salida, diagnóstico, notas, medicamento_recetado).
+2. Endpoint `POST /api/consultas` — guardar consulta nueva con hora de entrada automática.
+3. Endpoint `PATCH /api/consultas/:id/cerrar` — registrar hora de salida, diagnóstico y notas.
+4. Formulario de consulta y lista de consultas en el expediente.
 
 > Nota: el Sprint 3 usa el prefijo `/api/` (como `/api/pacientes`). Las rutas viejas
 > (`/registro`, `/login`) siguen sin prefijo. Conviene unificarlas bajo `/api/`

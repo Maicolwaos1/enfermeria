@@ -270,31 +270,33 @@ Sistema web para la gestión de enfermería escolar. Permite a las enfermeras au
 
 ---
 
-## Ideas y Mejoras Futuras (opcionales)
+## Mejoras del Proyecto
 
-Lista de mejoras para subir la calidad del proyecto y para la presentación final.
-No son obligatorias; se pueden tomar según el tiempo disponible.
+### ✅ Confirmadas (entran al proyecto)
 
-### Funcionalidades
+Estas mejoras quedaron acordadas por el equipo y se implementarán (se pueden formalizar
+como Sprints 10-13 más adelante).
+
+**Funcionalidades**
 - **Roles de usuario** (enfermera vs. administrador): solo el admin puede dar de alta nuevas enfermeras (refuerza RF02).
-- **Editar / dar de baja pacientes** (no solo crear y consultar).
 - **Reportes en el Dashboard:** consultas del día, medicamentos más usados, total de pacientes atendidos.
-- **Exportar el expediente a PDF** para imprimir o compartir.
-- **Historial de quién hizo cada acción** (auditoría): qué enfermera registró cada consulta y a qué hora.
-- **Paginación y filtros** en la búsqueda de pacientes y en el inventario.
-- **Recuperación de contraseña** por correo.
+- **Exportar el expediente a PDF** para imprimir o compartir (ej. con `jspdf`).
 
-### Estilos y experiencia de usuario (UI/UX)
+**Estilos / UX**
 - **Migrar a Tailwind CSS** de forma completa (hoy hay CSS a mano) para un diseño consistente y responsivo.
-- **Librería de componentes** (shadcn/ui o Material UI) para formularios, tablas y botones uniformes.
-- **Notificaciones tipo toast** (react-hot-toast) para éxito/error en vez de texto plano.
-- **Tema visual de clínica:** paleta de colores suave, ícono/logo, tipografía legible.
-- **Alergias y enfermedades crónicas en rojo** bien resaltadas en el expediente (RF06).
-- **Indicadores de carga** (spinners) y estados vacíos amigables ("Aún no hay consultas").
-- **Modo responsivo real** probado en tablet (RNF02).
+- **Notificaciones tipo toast** (`react-hot-toast`) para éxito/error en vez de texto plano.
 
-### Tecnologías / herramientas
-- **TanStack Query (React Query)** para manejar las llamadas al backend (carga, errores, caché).
-- **Zod o express-validator** para validar datos de forma limpia en el servidor.
-- **Jest + Supertest** para pruebas automáticas de los endpoints (apoya el Sprint 8).
-- **Despliegue con HTTPS:** backend en Render/Railway y frontend en Vercel (cumple RNF04).
+**Tecnología**
+- **TanStack Query (React Query)** para manejar las llamadas al backend (carga, errores, caché) de forma más limpia.
+
+### 🧪 A cargo del equipo de QA
+- **Pruebas automáticas con Jest + Supertest** sobre los endpoints (apoya el Sprint 8). Lo coordina QA.
+
+### 💡 Opcionales / Trabajo futuro
+- Editar / dar de baja pacientes (no solo crear y consultar).
+- Historial de auditoría (qué enfermera hizo cada acción y a qué hora).
+- Paginación y filtros en búsqueda de pacientes e inventario.
+- Recuperación de contraseña por correo.
+- Librería de componentes (shadcn/ui o Material UI) y tema visual de clínica (logo, paleta).
+- Validación con Zod / express-validator en el servidor.
+- **Despliegue con HTTPS** (cumple RNF04) — *por evaluar*: backend en Render/Railway y frontend en Vercel.

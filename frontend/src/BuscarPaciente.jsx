@@ -69,7 +69,19 @@ export default function BuscarPaciente() {
           {cargando ? 'Buscando...' : 'Buscar'}
         </button>
 
-        {mensajeError && <p className="error-text">{mensajeError}</p>}
+        {mensajeError && (
+          <>
+            <p className="error-text">{mensajeError}</p>
+            <button
+              className="login-button"
+              type="button"
+              onClick={() => navigate('/pacientes/nuevo')}
+              style={{ backgroundColor: '#1a8f3c' }}
+            >
+              + Registrar paciente nuevo
+            </button>
+          </>
+        )}
 
         {/* Resultado de la búsqueda */}
         {paciente && (

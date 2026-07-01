@@ -75,6 +75,19 @@ export default function Expediente() {
           <p><strong>Teléfono:</strong> {paciente.telefono || 'No registrado'}</p>
         </div>
 
+        {/* Alergias y enfermedades crónicas resaltadas en rojo (Sprint 4) */}
+        {(paciente.alergias || paciente.enfermedades_cronicas) && (
+          <div className="alerta-medica">
+            <p className="alerta-medica-titulo">⚠ Alertas médicas</p>
+            {paciente.alergias && (
+              <p><strong>Alergias:</strong> {paciente.alergias}</p>
+            )}
+            {paciente.enfermedades_cronicas && (
+              <p><strong>Enfermedades crónicas:</strong> {paciente.enfermedades_cronicas}</p>
+            )}
+          </div>
+        )}
+
         {/* Historial de consultas */}
         <h3 style={{ marginTop: '20px', alignSelf: 'flex-start' }}>Historial de consultas</h3>
         {consultas.length === 0 ? (

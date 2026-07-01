@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { API_URL } from './api';
 
 export default function Login() {
@@ -9,7 +9,17 @@ export default function Login() {
   const [contrasenia, setContrasenia] = useState('');
 
   const [mensajeError, setMensajeError] = useState('');
+  const [mensajeAviso, setMensajeAviso] = useState('');
   const [cargando, setCargando] = useState(false);
+
+  // Si llegamos aquí porque la sesión expiró, mostramos el aviso una vez
+  useEffect(() => {
+    const aviso = localStorage.getItem('avisoSesion');
+    if (aviso) {
+      setMensajeAviso(aviso);
+      localStorage.removeItem('avisoSesion');
+    }
+  }, []);
 
   const handleAcceder = async () => {
     // Validación de campos vacíos
@@ -37,8 +47,10 @@ export default function Login() {
         return;
       }
 
-      // Inicio de sesión correcto: guardamos el nombre y vamos al Dashboard
+      // Inicio de sesión correcto: guardamos el token, el nombre y el rol
+      localStorage.setItem('token', datos.token || '');
       localStorage.setItem('nombreEnfermera', datos.nombre || usuario);
+      localStorage.setItem('rolEnfermera', datos.rol || 'enfermera');
       navigate('/dashboard');
     } catch (error) {
       setMensajeError('Usuario o contraseña incorrecta');
@@ -77,11 +89,8 @@ export default function Login() {
           {cargando ? 'Entrando...' : 'Acceder'}
         </button>
 
+        {mensajeAviso && <p className="aviso-text">{mensajeAviso}</p>}
         {mensajeError && <p className="error-text">{mensajeError}</p>}
-
-        <Link to="/registro" className="login-link">
-          Registro de enfermera
-        </Link>
       </div>
     </div>
   );

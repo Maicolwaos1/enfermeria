@@ -1,6 +1,7 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { API_URL } from './api';
+import { apiFetch } from './api';
+import Layout from './Layout';
 
 export default function BuscarPaciente() {
   const navigate = useNavigate();
@@ -9,13 +10,6 @@ export default function BuscarPaciente() {
   const [paciente, setPaciente] = useState(null);
   const [mensajeError, setMensajeError] = useState('');
   const [cargando, setCargando] = useState(false);
-
-  // Si no hay sesión iniciada, regresamos al Login
-  useEffect(() => {
-    if (!localStorage.getItem('nombreEnfermera')) {
-      navigate('/');
-    }
-  }, [navigate]);
 
   const handleBuscar = async () => {
     if (!matricula) {
@@ -29,7 +23,7 @@ export default function BuscarPaciente() {
     setCargando(true);
 
     try {
-      const respuesta = await fetch(`${API_URL}/api/pacientes/${matricula}`);
+      const respuesta = await apiFetch(`/api/pacientes/${matricula}`);
       const datos = await respuesta.json();
 
       if (!respuesta.ok) {
@@ -47,7 +41,7 @@ export default function BuscarPaciente() {
   };
 
   return (
-    <div className="login-container">
+    <Layout>
       <div className="login-card">
         <h2 className="login-title">Buscar Paciente</h2>
 
@@ -97,16 +91,7 @@ export default function BuscarPaciente() {
             </button>
           </div>
         )}
-
-        <button
-          className="login-link"
-          type="button"
-          onClick={() => navigate('/dashboard')}
-          style={{ background: 'none', border: 'none', cursor: 'pointer' }}
-        >
-          ← Volver al Dashboard
-        </button>
       </div>
-    </div>
+    </Layout>
   );
 }

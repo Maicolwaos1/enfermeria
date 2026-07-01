@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { API_URL } from './api';
+import { useNavigate } from 'react-router-dom';
+import { apiFetch } from './api';
+import Layout from './Layout';
 
 export default function Registro() {
   const navigate = useNavigate();
@@ -14,10 +15,19 @@ export default function Registro() {
   const [mensajeExito, setMensajeExito] = useState('');
   const [cargando, setCargando] = useState(false);
 
+  // Formato de correo válido (no cualquier texto)
+  const correoValido = correo === '' || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(correo);
+
   const handleRegistrar = async () => {
     // Validación de campos vacíos
     if (!nombre || !usuario || !correo || !contrasenia) {
       setMensajeError('Todos los campos son obligatorios');
+      setMensajeExito('');
+      return;
+    }
+
+    if (!correoValido) {
+      setMensajeError('Escribe un correo válido (ej. nombre@gmail.com)');
       setMensajeExito('');
       return;
     }
@@ -27,8 +37,8 @@ export default function Registro() {
     setCargando(true);
 
     try {
-      // Llamada al endpoint POST /registro del backend
-      const respuesta = await fetch(`${API_URL}/registro`, {
+      // Llamada al endpoint POST /registro del backend (requiere token de admin)
+      const respuesta = await apiFetch('/registro', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ nombre, usuario, correo, password: contrasenia }),
@@ -42,9 +52,9 @@ export default function Registro() {
         return;
       }
 
-      // Registro correcto: avisamos y regresamos al Login después de un momento
-      setMensajeExito('Enfermera registrada. Redirigiendo al login...');
-      setTimeout(() => navigate('/'), 1500);
+      // Enfermera creada: avisamos y regresamos al Dashboard (el admin sigue con sesión)
+      setMensajeExito('Enfermera creada correctamente. Redirigiendo...');
+      setTimeout(() => navigate('/dashboard'), 1500);
     } catch (error) {
       setMensajeError('No se pudo conectar con el servidor');
     } finally {
@@ -53,9 +63,9 @@ export default function Registro() {
   };
 
   return (
-    <div className="login-container">
+    <Layout>
       <div className="login-card">
-        <h2 className="login-title">Registro de Enfermera</h2>
+        <h2 className="login-title">Crear Nueva Enfermera</h2>
 
         <input
           className="login-input"
@@ -74,12 +84,15 @@ export default function Registro() {
         />
 
         <input
-          className="login-input"
+          className={`login-input ${!correoValido ? 'input-error' : ''}`}
           type="email"
-          placeholder="Correo"
+          placeholder="Correo (ej. nombre@gmail.com)"
           value={correo}
           onChange={(e) => setCorreo(e.target.value)}
         />
+        {!correoValido && (
+          <p className="campo-error">Formato de correo no válido</p>
+        )}
 
         <input
           className="login-input"
@@ -95,16 +108,12 @@ export default function Registro() {
           onClick={handleRegistrar}
           disabled={cargando}
         >
-          {cargando ? 'Registrando...' : 'Registrarse'}
+          {cargando ? 'Creando...' : 'Crear enfermera'}
         </button>
 
         {mensajeError && <p className="error-text">{mensajeError}</p>}
         {mensajeExito && <p className="success-text">{mensajeExito}</p>}
-
-        <Link to="/" className="login-link">
-          ← Volver al Login
-        </Link>
       </div>
-    </div>
+    </Layout>
   );
 }

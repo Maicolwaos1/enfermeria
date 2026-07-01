@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { API_URL } from './api';
+import { TriangleAlert } from 'lucide-react';
+import { apiFetch } from './api';
+import Layout from './Layout';
 
 export default function Expediente() {
   const { id } = useParams();      // el id del paciente viene en la URL
@@ -11,16 +13,16 @@ export default function Expediente() {
   const [mensajeError, setMensajeError] = useState('');
   const [cargando, setCargando] = useState(true);
 
-  useEffect(() => {
-    // Si no hay sesión iniciada, regresamos al Login
-    if (!localStorage.getItem('nombreEnfermera')) {
-      navigate('/');
-      return;
-    }
+  // Estado de la edición de alergias (Sprint 4, endpoint PATCH)
+  const [editando, setEditando] = useState(false);
+  const [alergias, setAlergias] = useState('');
+  const [enfermedadesCronicas, setEnfermedadesCronicas] = useState('');
+  const [guardando, setGuardando] = useState(false);
 
+  useEffect(() => {
     const cargarExpediente = async () => {
       try {
-        const respuesta = await fetch(`${API_URL}/api/pacientes/${id}/expediente`);
+        const respuesta = await apiFetch(`/api/pacientes/${id}/expediente`);
         const datos = await respuesta.json();
 
         if (!respuesta.ok) {
@@ -38,31 +40,71 @@ export default function Expediente() {
     };
 
     cargarExpediente();
-  }, [id, navigate]);
+  }, [id]);
+
+  // Abrir el formulario de edición con los valores actuales
+  const abrirEdicion = () => {
+    setAlergias(paciente.alergias || '');
+    setEnfermedadesCronicas(paciente.enfermedades_cronicas || '');
+    setEditando(true);
+  };
+
+  const guardarAlergias = async () => {
+    setGuardando(true);
+    try {
+      const respuesta = await apiFetch(`/api/pacientes/${id}/alergias`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          alergias,
+          enfermedades_cronicas: enfermedadesCronicas,
+        }),
+      });
+
+      const datos = await respuesta.json();
+
+      if (!respuesta.ok) {
+        setMensajeError(datos.mensaje || 'No se pudieron guardar las alergias');
+        return;
+      }
+
+      // Reflejar los cambios en pantalla sin recargar
+      setPaciente({
+        ...paciente,
+        alergias,
+        enfermedades_cronicas: enfermedadesCronicas,
+      });
+      setEditando(false);
+    } catch (error) {
+      setMensajeError('No se pudo conectar con el servidor');
+    } finally {
+      setGuardando(false);
+    }
+  };
 
   if (cargando) {
     return (
-      <div className="login-container">
+      <Layout>
         <div className="login-card"><p>Cargando expediente...</p></div>
-      </div>
+      </Layout>
     );
   }
 
-  if (mensajeError) {
+  if (mensajeError && !paciente) {
     return (
-      <div className="login-container">
+      <Layout>
         <div className="login-card">
           <p className="error-text">{mensajeError}</p>
           <button className="login-button" type="button" onClick={() => navigate('/buscar')}>
             Volver a buscar
           </button>
         </div>
-      </div>
+      </Layout>
     );
   }
 
   return (
-    <div className="login-container">
+    <Layout>
       <div className="login-card" style={{ maxWidth: '500px' }}>
         <h2 className="login-title">Expediente del Paciente</h2>
 
@@ -76,9 +118,12 @@ export default function Expediente() {
         </div>
 
         {/* Alergias y enfermedades crónicas resaltadas en rojo (Sprint 4) */}
-        {(paciente.alergias || paciente.enfermedades_cronicas) && (
+        {!editando && (paciente.alergias || paciente.enfermedades_cronicas) && (
           <div className="alerta-medica">
-            <p className="alerta-medica-titulo">⚠ Alertas médicas</p>
+            <p className="alerta-medica-titulo">
+              <TriangleAlert size={16} strokeWidth={2.25} />
+              Alertas médicas
+            </p>
             {paciente.alergias && (
               <p><strong>Alergias:</strong> {paciente.alergias}</p>
             )}
@@ -86,6 +131,61 @@ export default function Expediente() {
               <p><strong>Enfermedades crónicas:</strong> {paciente.enfermedades_cronicas}</p>
             )}
           </div>
+        )}
+
+        {/* Si no hay alergias registradas y no estamos editando, lo indicamos */}
+        {!editando && !paciente.alergias && !paciente.enfermedades_cronicas && (
+          <p style={{ color: '#777', width: '100%', textAlign: 'left' }}>
+            Sin alergias ni enfermedades crónicas registradas.
+          </p>
+        )}
+
+        {/* Formulario de edición de alergias */}
+        {editando ? (
+          <div className="editar-alergias">
+            <label className="campo-label">Alergias</label>
+            <textarea
+              className="login-input"
+              style={{ height: '70px', paddingTop: '10px', resize: 'vertical' }}
+              placeholder="Ej. penicilina, nueces"
+              value={alergias}
+              onChange={(e) => setAlergias(e.target.value)}
+            />
+            <label className="campo-label">Enfermedades crónicas</label>
+            <textarea
+              className="login-input"
+              style={{ height: '70px', paddingTop: '10px', resize: 'vertical' }}
+              placeholder="Ej. asma, diabetes"
+              value={enfermedadesCronicas}
+              onChange={(e) => setEnfermedadesCronicas(e.target.value)}
+            />
+            <button
+              className="login-button"
+              type="button"
+              onClick={guardarAlergias}
+              disabled={guardando}
+            >
+              {guardando ? 'Guardando...' : 'Guardar'}
+            </button>
+            <button
+              className="login-button"
+              type="button"
+              onClick={() => setEditando(false)}
+              style={{ backgroundColor: '#6c757d', marginTop: '10px' }}
+            >
+              Cancelar
+            </button>
+            {mensajeError && <p className="error-text">{mensajeError}</p>}
+          </div>
+        ) : (
+          <button
+            className="login-button"
+            type="button"
+            onClick={abrirEdicion}
+            style={{ backgroundColor: '#d97706' }}
+          >
+            Editar alergias
+          </button>
         )}
 
         {/* Historial de consultas */}
@@ -101,11 +201,7 @@ export default function Expediente() {
             ))}
           </ul>
         )}
-
-        <button className="login-button" type="button" onClick={() => navigate('/buscar')}>
-          ← Volver a buscar
-        </button>
       </div>
-    </div>
+    </Layout>
   );
 }

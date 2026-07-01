@@ -1,50 +1,37 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { useNavigate } from 'react-router-dom';
+import { Search, UserPlus, Package } from 'lucide-react';
+import Layout from './Layout';
 
 export default function Dashboard() {
   const navigate = useNavigate();
-  const [nombre, setNombre] = useState('');
-
-  useEffect(() => {
-    // Recuperamos el nombre que se guardó al iniciar sesión
-    const nombreGuardado = localStorage.getItem('nombreEnfermera');
-
-    // Si no hay sesión iniciada, regresamos al Login
-    if (!nombreGuardado) {
-      navigate('/');
-      return;
-    }
-
-    setNombre(nombreGuardado);
-  }, [navigate]);
-
-  const handleCerrarSesion = () => {
-    // Borramos los datos de la sesión y regresamos al Login
-    localStorage.removeItem('nombreEnfermera');
-    navigate('/');
-  };
+  const nombre = localStorage.getItem('nombreEnfermera') || '';
 
   return (
-    <div className="login-container">
-      <div className="login-card">
-        <h2 className="login-title">Bienvenida, {nombre}</h2>
-        <p style={{ color: '#555', marginBottom: '20px', textAlign: 'center' }}>
-          Has iniciado sesión correctamente.
-        </p>
+    <Layout>
+      <h1 className="page-title">Bienvenida, {nombre}</h1>
+      <p className="page-subtitle">¿Qué deseas hacer hoy?</p>
 
-        <button className="login-button" type="button" onClick={() => navigate('/buscar')}>
-          Buscar paciente
+      <div className="dashboard-cards">
+        <button className="dash-card" type="button" onClick={() => navigate('/buscar')}>
+          <span className="dash-card-icon"><Search size={34} strokeWidth={1.75} /></span>
+          <span className="dash-card-titulo">Buscar paciente</span>
+          <span className="dash-card-desc">Encuentra un expediente por matrícula.</span>
         </button>
 
-        <button
-          className="login-button"
-          type="button"
-          onClick={handleCerrarSesion}
-          style={{ backgroundColor: '#6c757d', marginTop: '10px' }}
-        >
-          Cerrar sesión
+        <button className="dash-card" type="button" onClick={() => navigate('/pacientes/nuevo')}>
+          <span className="dash-card-icon"><UserPlus size={34} strokeWidth={1.75} /></span>
+          <span className="dash-card-titulo">Registrar paciente</span>
+          <span className="dash-card-desc">Da de alta a un alumno o personal nuevo.</span>
         </button>
+
+        {/* Funciones que llegan en sprints posteriores (se dejan visibles pero deshabilitadas) */}
+        <div className="dash-card dash-card-disabled" aria-disabled="true">
+          <span className="dash-card-icon"><Package size={34} strokeWidth={1.75} /></span>
+          <span className="dash-card-titulo">Inventario</span>
+          <span className="dash-card-desc">Próximamente (Sprint 6).</span>
+        </div>
       </div>
-    </div>
+    </Layout>
   );
 }

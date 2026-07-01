@@ -5,9 +5,13 @@ const express = require('express');
 const mysql = require('mysql2');
 const bcrypt = require('bcrypt');
 const cors = require('cors');
+const jwt = require('jsonwebtoken');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+
+// Secreto para firmar/verificar los tokens JWT (viene del .env)
+const JWT_SECRET = process.env.JWT_SECRET;
 
 // Permite que el frontend (React/Vite) pueda llamar a estos endpoints
 app.use(cors());
@@ -35,6 +39,41 @@ db.getConnection((error, conexion) => {
     }
 });
 
+// ============================================================
+//  SPRINT 9 — Seguridad con JWT (middlewares)
+// ============================================================
+
+// Verifica que la petición traiga un token válido en la cabecera:
+//   Authorization: Bearer <token>
+// Si es válido, guarda los datos de la enfermera en req.enfermera y continúa.
+function verificarToken(req, res, next) {
+    const cabecera = req.headers['authorization'];
+
+    if (!cabecera || !cabecera.startsWith('Bearer ')) {
+        return res.status(401).json({ mensaje: 'No autorizado: falta el token' });
+    }
+
+    const token = cabecera.split(' ')[1];
+
+    try {
+        const datos = jwt.verify(token, JWT_SECRET);
+        req.enfermera = datos; // { id, nombre, rol }
+        next();
+    } catch (error) {
+        // Token inválido o expirado
+        return res.status(401).json({ mensaje: 'Sesión expirada o token inválido' });
+    }
+}
+
+// Deja pasar solo si la enfermera del token es administradora.
+// Se usa después de verificarToken.
+function soloAdmin(req, res, next) {
+    if (req.enfermera && req.enfermera.rol === 'admin') {
+        return next();
+    }
+    return res.status(403).json({ mensaje: 'Solo un administrador puede hacer esto' });
+}
+
 // --- Ruta principal de prueba ---
 app.get('/', (req, res) => {
     res.send('El servidor está funcionando');
@@ -43,7 +82,8 @@ app.get('/', (req, res) => {
 // --- Tarea 1: Endpoint para registrar una enfermera ---
 // Recibe: nombre, usuario, contraseña, correo
 // Guarda los datos en la tabla enfermeras (con la contraseña encriptada)
-app.post('/registro', async (req, res) => {
+// Protegido: solo un administrador con sesión válida puede crear enfermeras.
+app.post('/registro', verificarToken, soloAdmin, async (req, res) => {
     const { nombre, usuario, password, correo } = req.body;
 
     // Verificar que vengan todos los datos
@@ -106,9 +146,27 @@ app.post('/login', async (req, res) => {
             return res.status(401).json({ mensaje: 'Usuario o contraseña incorrectos' });
         }
 
-        res.status(200).json({ mensaje: 'Inicio de sesión exitoso', nombre: enfermera.nombre });
+        // Generamos el token JWT con los datos de la enfermera. Expira en 8 horas.
+        const token = jwt.sign(
+            { id: enfermera.id, nombre: enfermera.nombre, rol: enfermera.rol },
+            JWT_SECRET,
+            { expiresIn: '8h' }
+        );
+
+        res.status(200).json({
+            mensaje: 'Inicio de sesión exitoso',
+            nombre: enfermera.nombre,
+            rol: enfermera.rol, // 'enfermera' o 'admin'
+            token,
+        });
     });
 });
+
+// ============================================================
+//  Todas las rutas que empiezan con /api requieren token válido
+//  (pacientes y, más adelante, consultas e inventario).
+// ============================================================
+app.use('/api', verificarToken);
 
 // ============================================================
 //  SPRINT 3 — Buscar paciente y ver expediente

@@ -15,7 +15,8 @@ expedientes de pacientes, consultas e inventario de medicamentos).
 | Backend | Node.js + Express |
 | Base de Datos | MySQL (relacional) |
 | Frontend | React + Vite + React Router |
-| Seguridad | bcrypt (encriptación de contraseñas), CORS, variables de entorno (dotenv) |
+| Íconos | lucide-react (íconos de línea) |
+| Seguridad | bcrypt (contraseñas), **JWT (jsonwebtoken)** para sesiones, roles (enfermera/admin), CORS, variables de entorno (dotenv) |
 
 ---
 
@@ -24,21 +25,34 @@ expedientes de pacientes, consultas e inventario de medicamentos).
 ```
 enfermeria/
 ├── backend/                  # Servidor Node.js + Express
-│   ├── server.js             # Endpoints y conexión a MySQL
-│   ├── .env                  # Credenciales de la BD (NO se sube a git)
+│   ├── server.js             # Endpoints, middlewares JWT y conexión a MySQL
+│   ├── crearAdmin.js         # Script para crear/promover un admin (bootstrap)
+│   ├── .env                  # Credenciales de BD y JWT_SECRET (NO se sube a git)
 │   ├── .env.example          # Plantilla del .env para el equipo
 │   └── package.json
 ├── frontend/                 # Aplicación React (Vite)
 │   └── src/
-│       ├── App.jsx           # Rutas de la aplicación
-│       ├── api.js            # URL del backend (configuración central)
-│       ├── Login.jsx         # Pantalla de inicio de sesión
-│       ├── Registro.jsx      # Pantalla de registro de enfermera
-│       ├── Dashboard.jsx     # Pantalla principal tras el login
-│       └── index.css         # Estilos
+│       ├── App.jsx               # Rutas de la aplicación (con RutaProtegida)
+│       ├── api.js                # URL del backend + apiFetch (token y manejo de 401)
+│       ├── RutaProtegida.jsx     # Guard de rutas (token; opcional solo-admin)
+│       ├── Login.jsx             # Pantalla de inicio de sesión
+│       ├── Registro.jsx          # Crear nueva enfermera (solo admin)
+│       ├── Layout.jsx            # Envoltura visual (Navbar + contenido)
+│       ├── Navbar.jsx            # Barra superior + menú de cuenta
+│       ├── Dashboard.jsx         # Pantalla de inicio con tarjetas de acción
+│       ├── BuscarPaciente.jsx    # Búsqueda de paciente por matrícula
+│       ├── RegistrarPaciente.jsx # Alta manual de paciente nuevo
+│       ├── Expediente.jsx        # Expediente + edición de alergias
+│       └── index.css             # Estilos
 ├── ProyectoIntegrador_II.md  # Planeación y sprints
 └── DOCUMENTACION.md          # Este documento
 ```
+
+> **Navegación (rediseño post-Sprint 4):** las pantallas internas comparten
+> `Layout.jsx`, que dibuja `Navbar.jsx` arriba (enlaces **Inicio / Buscar /
+> Registrar** y el menú de cuenta). La protección de sesión la hace `RutaProtegida.jsx`
+> a nivel de ruta (ver sección 5). Ya no hay que llegar a "Registrar paciente" solo
+> cuando falla una búsqueda: se accede directo desde la barra o las tarjetas del Dashboard.
 
 ---
 
@@ -56,7 +70,8 @@ CREATE TABLE IF NOT EXISTS enfermeras (
   nombre VARCHAR(100) NOT NULL,
   usuario VARCHAR(50) NOT NULL UNIQUE,
   password VARCHAR(255) NOT NULL,   -- se guarda encriptada con bcrypt
-  correo VARCHAR(100) NOT NULL UNIQUE
+  correo VARCHAR(100) NOT NULL UNIQUE,
+  rol ENUM('enfermera','admin') NOT NULL DEFAULT 'enfermera'  -- roles
 );
 
 -- Tabla de pacientes (Sprint 3, ampliada en el Sprint 4)
@@ -79,6 +94,14 @@ CREATE TABLE IF NOT EXISTS pacientes (
 >   ADD COLUMN enfermedades_cronicas TEXT;
 > ```
 
+> **¿Ya tenías la tabla `enfermeras` sin la columna `rol`?** Agrégala con:
+> ```sql
+> ALTER TABLE enfermeras
+>   ADD COLUMN rol ENUM('enfermera','admin') NOT NULL DEFAULT 'enfermera';
+> ```
+> Después crea/promueve tu primer administrador con el script `crearAdmin.js`
+> (ver sección 6).
+
 > **¿Ya creaste la tabla con la columna `contraseña` (con ñ)?**
 > Renómbrala con: `ALTER TABLE enfermeras CHANGE contraseña password VARCHAR(255) NOT NULL;`
 
@@ -92,8 +115,60 @@ CREATE TABLE IF NOT EXISTS pacientes (
 
 Servidor base: `http://localhost:3000`
 
-### `POST /registro`
-Registra una enfermera nueva. La contraseña se encripta con bcrypt antes de guardarse.
+### Autenticación (JWT) — Sprint 9
+
+Salvo `POST /login` (público), **todos los endpoints protegidos exigen un token JWT**
+en la cabecera de la petición:
+
+```
+Authorization: Bearer <token>
+```
+
+- El token se obtiene al iniciar sesión (`POST /login`) y **expira en 8 horas**.
+- Si el token falta o es inválido/expiró, el backend responde **401**.
+- Los endpoints solo para administradoras responden **403** si el token es de una
+  enfermera normal.
+- En el frontend esto lo maneja `apiFetch` en [api.js](frontend/src/api.js): agrega el
+  token automáticamente y, ante un 401, cierra la sesión y regresa al Login.
+
+| Endpoint | Protección |
+|----------|------------|
+| `POST /login` | Público |
+| `POST /registro` | Token **+ rol admin** |
+| `GET/POST/PATCH /api/pacientes/*` | Token (cualquier enfermera) |
+
+### `POST /login`
+Verifica las credenciales y devuelve el nombre, el rol y el **token JWT**.
+
+**Body (JSON):**
+```json
+{
+  "usuario": "alopez",
+  "password": "miClave123"
+}
+```
+
+**Respuesta (200):**
+```json
+{
+  "mensaje": "Inicio de sesión exitoso",
+  "nombre": "Ana López",
+  "rol": "admin",
+  "token": "eyJhbGciOiJIUzI1Ni..."
+}
+```
+
+**Respuestas:**
+| Código | Significado |
+|--------|-------------|
+| 200 | Inicio de sesión exitoso (devuelve `nombre`, `rol` y `token`) |
+| 400 | Faltan usuario o contraseña |
+| 401 | Usuario o contraseña incorrectos |
+| 500 | Error del servidor |
+
+### `POST /registro`  *(requiere token de admin)*
+Crea una enfermera nueva. La contraseña se encripta con bcrypt antes de guardarse.
+Solo una administradora con sesión válida puede llamarlo.
 
 **Body (JSON):**
 ```json
@@ -110,25 +185,8 @@ Registra una enfermera nueva. La contraseña se encripta con bcrypt antes de gua
 |--------|-------------|
 | 201 | Enfermera registrada exitosamente |
 | 400 | Faltan campos / usuario o correo ya registrados |
-| 500 | Error del servidor |
-
-### `POST /login`
-Verifica las credenciales y devuelve el nombre de la enfermera.
-
-**Body (JSON):**
-```json
-{
-  "usuario": "alopez",
-  "password": "miClave123"
-}
-```
-
-**Respuestas:**
-| Código | Significado |
-|--------|-------------|
-| 200 | Inicio de sesión exitoso (devuelve `nombre`) |
-| 400 | Faltan usuario o contraseña |
-| 401 | Usuario o contraseña incorrectos |
+| 401 | Falta el token o es inválido |
+| 403 | El token no es de una administradora |
 | 500 | Error del servidor |
 
 ### `GET /api/pacientes/:matricula`  *(Sprint 3)*
@@ -199,22 +257,62 @@ Agrega o edita las alergias y enfermedades crónicas de un paciente existente.
 
 ## 5. Pantallas del Frontend (conexión con el backend)
 
-| Ruta | Pantalla | Conexión |
-|------|----------|----------|
-| `/` | Login | Llama a `POST /login`; si es correcto guarda el nombre y va a `/dashboard` |
-| `/registro` | Registro | Llama a `POST /registro`; al registrar redirige al Login |
-| `/dashboard` | Dashboard | Saludo, botón "Buscar paciente" y "Cerrar sesión" |
-| `/buscar` | Buscar Paciente | Llama a `GET /api/pacientes/:matricula`; muestra el resultado o "No encontrado" (con botón para registrar uno nuevo) |
-| `/pacientes/nuevo` | Registrar Paciente | Llama a `POST /api/pacientes`; al guardar redirige al expediente del paciente nuevo |
-| `/expediente/:id` | Expediente | Llama a `GET /api/pacientes/:id/expediente`; muestra datos, alergias resaltadas e historial |
+| Ruta | Pantalla | Acceso | Conexión |
+|------|----------|--------|----------|
+| `/` | Login | Pública | Llama a `POST /login`; guarda `token`, `nombre` y `rol`, y va a `/dashboard` |
+| `/dashboard` | Dashboard | Con sesión | Pantalla de inicio con saludo y **tarjetas de acción** (Buscar paciente, Registrar paciente, Inventario *próximamente*) |
+| `/buscar` | Buscar Paciente | Con sesión | Llama a `GET /api/pacientes/:matricula`; muestra el resultado o "No encontrado" (con atajo para registrar uno nuevo) |
+| `/pacientes/nuevo` | Registrar Paciente | Con sesión | Llama a `POST /api/pacientes`; al guardar redirige al expediente del paciente nuevo |
+| `/expediente/:id` | Expediente | Con sesión | Llama a `GET /api/pacientes/:id/expediente`; muestra datos, alergias resaltadas e historial, y permite **editar alergias** con `PATCH /api/pacientes/:id/alergias` |
+| `/registro` | Crear Nueva Enfermera | **Solo admin** | Llama a `POST /registro`; al crearla vuelve al Dashboard (sin cerrar la sesión del admin) |
 
-**Flujo:** Login → Dashboard → "Buscar paciente" → resultado → "Ver expediente".
+**Navegación (Navbar + Layout):** las pantallas internas se envuelven en `Layout.jsx`,
+que muestra la barra `Navbar.jsx` arriba: marca, enlaces **Inicio / Buscar / Registrar**
+(la ruta activa se resalta) y, a la derecha, un **menú de cuenta**.
 
-**Manejo de sesión:** al iniciar sesión se guarda `nombreEnfermera` en
-`localStorage`. Las pantallas internas lo leen; si no existe, redirigen al Login.
-Al cerrar sesión se borra y se regresa al Login.
+**Menú de cuenta (esquina superior derecha):** muestra el nombre de la enfermera y un
+**badge de rol** (Administrador / Enfermera). Contiene:
+- **Cambiar usuario** — cierra la sesión y regresa al Login para entrar con otra cuenta.
+- **Crear nueva enfermera** — *solo visible para admin*; abre `/registro`.
+- **Cerrar sesión** — cierra la sesión y regresa al Login.
 
-La URL del backend está centralizada en [frontend/src/api.js](frontend/src/api.js).
+**Roles:** hay dos roles, `enfermera` y `admin`. Solo el admin puede crear enfermeras
+(el registro público se quitó). El primer admin se crea con `crearAdmin.js` (sección 6).
+
+**Protección de rutas y sesión (Sprint 9):** al iniciar sesión se guardan `token`,
+`nombreEnfermera` y `rolEnfermera` en `localStorage`. El componente `RutaProtegida.jsx`
+protege las rutas internas: sin token manda al Login, y con `soloAdmin` exige rol admin.
+Todas las peticiones a `/api` y a `/registro` usan `apiFetch`, que agrega el token; si el
+backend responde **401** (token expirado/ inválido), se cierra la sesión y se avisa al
+usuario en el Login.
+
+La URL del backend y el helper `apiFetch` están en [frontend/src/api.js](frontend/src/api.js).
+
+### Validaciones y UX del formulario de registro de paciente
+
+El formulario `RegistrarPaciente.jsx` incluye validaciones en el cliente para evitar
+datos basura antes de enviarlos al backend:
+
+- **Matrícula con prefijo fijo `UP`:** la caja "UP" no es editable y el usuario solo
+  escribe los números (el input filtra todo lo que no sea dígito). Al guardar se
+  reconstruye como `UP` + números (ej. `UP240231`), consistente con la búsqueda.
+- **Correo con formato válido:** se valida contra `algo@dominio.com`. Si el texto no
+  es un correo válido, el campo se marca en **rojo** con el mensaje "Formato de correo
+  no válido" y no deja guardar. El correo es opcional: si se deja vacío, pasa.
+- **Alergias y enfermedades crónicas con Sí/No:** cada una se pregunta con opciones
+  **Sí / No** (radios). Con "No" no se muestra ningún campo y se guarda vacío (en el
+  expediente aparece "Sin alergias ni enfermedades crónicas registradas"). Con "Sí" se
+  revela el cuadro de texto para escribir el detalle; si queda vacío, no deja guardar.
+
+> Estas validaciones son del lado del cliente (UX inmediata). La validación en el
+> **servidor** —que rechaza datos inválidos aunque no pasen por el formulario— es la
+> tarea del **Sprint 8** (RNF03/RNF01).
+
+### Íconos
+
+La interfaz usa **lucide-react** en lugar de emojis: `Stethoscope` en la marca de la
+Navbar, `Search` / `UserPlus` / `Package` en las tarjetas del Dashboard y
+`TriangleAlert` en el recuadro de alertas médicas del expediente.
 
 ---
 
@@ -233,11 +331,24 @@ cd backend
 npm install          # solo la primera vez
 # Copia la plantilla de variables de entorno y edita tus datos de MySQL:
 cp .env.example .env   # (en Windows PowerShell: copy .env.example .env)
+# En el .env, además de los datos de MySQL, pon un JWT_SECRET (cadena larga y secreta).
 npm start            # inicia en http://localhost:3000
 ```
 Si la conexión es correcta verás: `Conectado a la base de datos MySQL`.
 
-### Paso 3 — Levantar el frontend
+### Paso 3 — Crear el primer administrador
+Como el registro por la web es solo para admins, el primer admin se crea desde la
+terminal (resuelve el problema del "primer admin"):
+```bash
+cd backend
+npm run crear-admin <usuario> <password> ["Nombre"] [correo]
+# Ejemplo:
+npm run crear-admin jefa Clave123 "Ana López" ana@escuela.com
+```
+- Si el usuario ya existe, lo asciende a admin (y actualiza su contraseña).
+- Si no existe, lo crea como admin (contraseña encriptada con bcrypt).
+
+### Paso 4 — Levantar el frontend
 En otra terminal:
 ```bash
 cd frontend
@@ -245,11 +356,12 @@ npm install          # solo la primera vez
 npm run dev          # inicia en http://localhost:5173
 ```
 
-### Paso 4 — Probar el flujo
+### Paso 5 — Probar el flujo
 1. Abre `http://localhost:5173` en el navegador.
-2. Entra a **Registro de enfermera** y crea una cuenta.
-3. Regresa al **Login** e inicia sesión con esa cuenta.
-4. Deberías llegar al **Dashboard** con tu nombre y poder **Cerrar sesión**.
+2. Inicia sesión con la cuenta de **admin** creada en el Paso 3.
+3. Llegas al **Dashboard**. En el **menú de cuenta** (arriba a la derecha) usa
+   **Crear nueva enfermera** para dar de alta a otras enfermeras.
+4. Prueba buscar/registrar pacientes y ver expedientes.
 
 ---
 
@@ -285,6 +397,31 @@ npm run dev          # inicia en http://localhost:5173
 | 4 | Formulario de registro manual (`/pacientes/nuevo`) | ✅ Hecho |
 | 5 | Conectar formulario al endpoint y redirigir al expediente | ✅ Hecho |
 | 6 | Mostrar alergias en recuadro rojo en el expediente | ✅ Hecho |
+
+**Extras (rediseño posterior al Sprint 4):**
+- **Barra de navegación (`Navbar` + `Layout`)** en todas las pantallas internas, con
+  guard de sesión centralizado y Dashboard de inicio con tarjetas de acción.
+- **Editar alergias desde el expediente:** el frontend ya consume el endpoint
+  `PATCH /api/pacientes/:id/alergias` (antes existía pero no se usaba).
+- **Validaciones del formulario de paciente:** prefijo fijo `UP` en la matrícula,
+  correo con formato válido (campo en rojo si no lo es) y alergias/enfermedades
+  crónicas con preguntas **Sí/No** que revelan el campo de texto (ver sección 5).
+- **Íconos con lucide-react** en lugar de emojis en toda la interfaz.
+- **Roles y menú de cuenta:** columna `rol` (enfermera/admin), menú de cuenta en la
+  Navbar y creación de enfermeras restringida a admins (registro público eliminado).
+
+### Sprint 9 — Seguridad con JWT ✅ *(adelantado)*
+| # | Tarea | Estado |
+|---|-------|--------|
+| 1 | Instalar `jsonwebtoken` y agregar `JWT_SECRET` al `.env` | ✅ Hecho |
+| 2 | Generar y devolver un token JWT al iniciar sesión (id, nombre, rol) | ✅ Hecho |
+| 3 | Middleware que verifica el token y protege los endpoints (`/api/*`, `/registro`) | ✅ Hecho |
+| 4 | Guardar el token en el frontend y enviarlo en cada petición (`apiFetch`) | ✅ Hecho |
+| 5 | Proteger rutas del frontend con `RutaProtegida` (redirige al Login sin token) | ✅ Hecho |
+| 6 | Manejar token expirado/inválido: cerrar sesión y avisar al usuario | ✅ Hecho |
+
+> Extra: `POST /registro` además exige **rol admin** (middleware `soloAdmin`), y existe
+> el script `crearAdmin.js` para crear el primer administrador.
 
 ---
 

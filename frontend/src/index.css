@@ -1,5 +1,6 @@
 /* src/index.css */
-@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap');
+/* La fuente Poppins se carga desde index.html; el tema de componentes vive
+   en src/theme.js (Mantine). Aquí solo quedan el fondo y detalles globales. */
 
 /* Paleta y tokens del tema (azul) */
 :root {

@@ -1,9 +1,9 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
-import { apiJson } from './lib/api';
-import { esCorreoValido, esMatriculaValida, MAX_DIGITOS_MATRICULA } from './lib/validaciones';
-import Layout from './Layout';
+import { apiJson } from '../lib/api';
+import { esCorreoValido, esMatriculaValida, MAX_DIGITOS_MATRICULA } from '../lib/validaciones';
+import Layout from '../components/Layout';
 
 export default function RegistrarPaciente() {
   const navigate = useNavigate();
@@ -109,11 +109,11 @@ export default function RegistrarPaciente() {
 
   return (
     <Layout>
-      <div className="login-card">
-        <h2 className="login-title">Registrar Paciente</h2>
+      <div className="card">
+        <h2 className="card-title">Registrar Paciente</h2>
 
         <input
-          className="login-input"
+          className="input"
           type="text"
           placeholder="Nombre completo"
           value={nombre}
@@ -124,7 +124,7 @@ export default function RegistrarPaciente() {
         <div className="input-group">
           <span className="input-prefix">UP</span>
           <input
-            className="login-input input-con-prefijo"
+            className="input input-con-prefijo"
             type="text"
             inputMode="numeric"
             maxLength={MAX_DIGITOS_MATRICULA}
@@ -138,7 +138,7 @@ export default function RegistrarPaciente() {
         <span className="campo-label">Fecha de nacimiento</span>
         <div className="fecha-grupo">
           <select
-            className="login-input"
+            className="input"
             value={dia}
             onChange={(e) => setDia(e.target.value)}
           >
@@ -148,7 +148,7 @@ export default function RegistrarPaciente() {
             ))}
           </select>
           <select
-            className="login-input"
+            className="input"
             value={mes}
             onChange={(e) => setMes(e.target.value)}
           >
@@ -158,7 +158,7 @@ export default function RegistrarPaciente() {
             ))}
           </select>
           <select
-            className="login-input"
+            className="input"
             value={anio}
             onChange={(e) => setAnio(e.target.value)}
           >
@@ -170,7 +170,7 @@ export default function RegistrarPaciente() {
         </div>
 
         <input
-          className={`login-input ${!correoValido ? 'input-error' : ''}`}
+          className={`input ${!correoValido ? 'input-error' : ''}`}
           type="email"
           placeholder="Correo (ej. nombre@gmail.com)"
           value={correo}
@@ -181,7 +181,7 @@ export default function RegistrarPaciente() {
         )}
 
         <input
-          className="login-input"
+          className="input"
           type="tel"
           placeholder="Teléfono (10 dígitos)"
           maxLength={10}
@@ -215,8 +215,7 @@ export default function RegistrarPaciente() {
         </div>
         {tieneAlergias && (
           <textarea
-            className="login-input"
-            style={{ height: '70px', paddingTop: '10px', resize: 'vertical' }}
+            className="input textarea"
             placeholder="¿Cuáles? (ej. penicilina, nueces)"
             value={alergias}
             onChange={(e) => setAlergias(e.target.value)}
@@ -249,8 +248,7 @@ export default function RegistrarPaciente() {
         </div>
         {tieneCronicas && (
           <textarea
-            className="login-input"
-            style={{ height: '70px', paddingTop: '10px', resize: 'vertical' }}
+            className="input textarea"
             placeholder="¿Cuáles? (ej. asma, diabetes)"
             value={enfermedadesCronicas}
             onChange={(e) => setEnfermedadesCronicas(e.target.value)}
@@ -258,7 +256,7 @@ export default function RegistrarPaciente() {
         )}
 
         <button
-          className="login-button"
+          className="btn"
           type="button"
           onClick={handleRegistrar}
           disabled={cargando}

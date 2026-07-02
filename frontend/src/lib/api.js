@@ -33,7 +33,7 @@ export async function apiJson(path, opciones = {}) {
       headers,
       body: opciones.body !== undefined ? JSON.stringify(opciones.body) : undefined,
     });
-  } catch (error) {
+  } catch {
     throw new ApiError('No se pudo conectar con el servidor', 0);
   }
 

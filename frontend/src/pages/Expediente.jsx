@@ -1,9 +1,9 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { TriangleAlert } from 'lucide-react';
 import toast from 'react-hot-toast';
-import { apiJson } from './lib/api';
-import Layout from './Layout';
+import { apiJson } from '../lib/api';
+import Layout from '../components/Layout';
 
 // Muestra la fecha de nacimiento como día/mes/año (sin la hora que trae el ISO)
 function formatearFecha(valor) {
@@ -81,7 +81,7 @@ export default function Expediente() {
   if (cargando) {
     return (
       <Layout>
-        <div className="login-card"><p>Cargando expediente...</p></div>
+        <div className="card"><p>Cargando expediente...</p></div>
       </Layout>
     );
   }
@@ -89,9 +89,9 @@ export default function Expediente() {
   if (mensajeError && !paciente) {
     return (
       <Layout>
-        <div className="login-card">
+        <div className="card">
           <p className="error-text">{mensajeError}</p>
-          <button className="login-button" type="button" onClick={() => navigate('/buscar')}>
+          <button className="btn" type="button" onClick={() => navigate('/buscar')}>
             Volver a buscar
           </button>
         </div>
@@ -101,8 +101,8 @@ export default function Expediente() {
 
   return (
     <Layout>
-      <div className="login-card" style={{ maxWidth: '500px' }}>
-        <h2 className="login-title">Expediente del Paciente</h2>
+      <div className="card card-lg">
+        <h2 className="card-title">Expediente del Paciente</h2>
 
         {/* Datos generales */}
         <div className="expediente-datos">
@@ -131,7 +131,7 @@ export default function Expediente() {
 
         {/* Si no hay alergias registradas y no estamos editando, lo indicamos */}
         {!editando && !paciente.alergias && !paciente.enfermedades_cronicas && (
-          <p style={{ color: '#777', width: '100%', textAlign: 'left' }}>
+          <p className="sin-datos">
             Sin alergias ni enfermedades crónicas registradas.
           </p>
         )}
@@ -141,22 +141,20 @@ export default function Expediente() {
           <div className="editar-alergias">
             <label className="campo-label">Alergias</label>
             <textarea
-              className="login-input"
-              style={{ height: '70px', paddingTop: '10px', resize: 'vertical' }}
+              className="input textarea"
               placeholder="Ej. penicilina, nueces"
               value={alergias}
               onChange={(e) => setAlergias(e.target.value)}
             />
             <label className="campo-label">Enfermedades crónicas</label>
             <textarea
-              className="login-input"
-              style={{ height: '70px', paddingTop: '10px', resize: 'vertical' }}
+              className="input textarea"
               placeholder="Ej. asma, diabetes"
               value={enfermedadesCronicas}
               onChange={(e) => setEnfermedadesCronicas(e.target.value)}
             />
             <button
-              className="login-button"
+              className="btn"
               type="button"
               onClick={guardarAlergias}
               disabled={guardando}
@@ -164,29 +162,27 @@ export default function Expediente() {
               {guardando ? 'Guardando...' : 'Guardar'}
             </button>
             <button
-              className="login-button"
+              className="btn btn-secondary"
               type="button"
               onClick={() => setEditando(false)}
-              style={{ backgroundColor: '#6c757d', marginTop: '10px' }}
             >
               Cancelar
             </button>
           </div>
         ) : (
           <button
-            className="login-button"
+            className="btn btn-warning"
             type="button"
             onClick={abrirEdicion}
-            style={{ backgroundColor: '#d97706' }}
           >
             Editar alergias
           </button>
         )}
 
         {/* Historial de consultas */}
-        <h3 style={{ marginTop: '20px', alignSelf: 'flex-start' }}>Historial de consultas</h3>
+        <h3 className="seccion-titulo">Historial de consultas</h3>
         {consultas.length === 0 ? (
-          <p style={{ color: '#777' }}>Aún no hay consultas registradas.</p>
+          <p className="sin-datos">Aún no hay consultas registradas.</p>
         ) : (
           <ul className="lista-consultas">
             {consultas.map((c) => (

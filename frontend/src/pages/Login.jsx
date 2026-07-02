@@ -1,8 +1,8 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
-import { apiJson } from './lib/api';
-import { guardarSesion, tomarAvisoSesion } from './lib/auth';
+import { apiJson } from '../lib/api';
+import { guardarSesion, tomarAvisoSesion } from '../lib/auth';
 
 export default function Login() {
   const navigate = useNavigate();
@@ -45,11 +45,11 @@ export default function Login() {
 
   return (
     <div className="login-container">
-      <div className="login-card">
-        <h2 className="login-title">Iniciar Sesión</h2>
+      <div className="card">
+        <h2 className="card-title">Iniciar Sesión</h2>
 
         <input
-          className="login-input"
+          className="input"
           type="text"
           placeholder="Usuario"
           value={usuario}
@@ -58,7 +58,7 @@ export default function Login() {
         />
 
         <input
-          className="login-input"
+          className="input"
           type="password"
           placeholder="Contraseña"
           value={contrasenia}
@@ -67,7 +67,7 @@ export default function Login() {
         />
 
         <button
-          className="login-button"
+          className="btn"
           type="button"
           onClick={handleAcceder}
           disabled={cargando}

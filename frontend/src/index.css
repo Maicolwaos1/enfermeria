@@ -28,13 +28,13 @@ body {
   display: flex;
   justify-content: center;
   align-items: center;
-  height: '100vh'; /* Asegura que ocupe toda la pantalla si tu layout lo permite */
+  height: 100vh;
   min-height: 100vh;
   padding: 20px;
   box-sizing: border-box;
 }
 
-.login-card {
+.card {
   background-color: #ffffff;
   padding: 40px;
   border-radius: var(--radius);
@@ -48,14 +48,14 @@ body {
   box-sizing: border-box;
 }
 
-.login-title {
+.card-title {
   margin-bottom: 20px;
   font-size: 24px;
   font-weight: 600;
   color: var(--text);
 }
 
-.login-input {
+.input {
   width: 100%;
   height: 46px;
   margin-bottom: 15px;
@@ -69,13 +69,13 @@ body {
   transition: border-color 0.15s, box-shadow 0.15s;
 }
 
-.login-input:focus {
+.input:focus {
   outline: none;
   border-color: var(--primary);
   box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
 }
 
-.login-button {
+.btn {
   width: 100%;
   height: 46px;
   background-color: var(--primary);
@@ -90,15 +90,15 @@ body {
   transition: background-color 0.15s, transform 0.05s;
 }
 
-.login-button:hover {
+.btn:hover {
   background-color: var(--primary-dark);
 }
 
-.login-button:active {
+.btn:active {
   transform: translateY(1px);
 }
 
-.login-button:disabled {
+.btn:disabled {
   opacity: 0.6;
   cursor: not-allowed;
 }
@@ -108,34 +108,6 @@ body {
   margin-top: 15px;
   font-size: 14px;
   font-weight: 600;
-}
-
-.success-text {
-  color: #1a8f3c;
-  margin-top: 15px;
-  font-size: 14px;
-  font-weight: 600;
-}
-
-.aviso-text {
-  color: #b26a00;
-  background-color: #fff4e5;
-  border: 1px solid #ffce93;
-  border-radius: 6px;
-  padding: 10px;
-  margin-top: 15px;
-  font-size: 14px;
-  font-weight: 600;
-  width: 100%;
-  box-sizing: border-box;
-  text-align: center;
-}
-
-.login-link {
-  margin-top: 20px;
-  color: var(--primary);
-  text-decoration: underline;
-  font-size: 15px;
 }
 
 .resultado-paciente {
@@ -184,12 +156,54 @@ body {
   letter-spacing: 0.5px;
 }
 
-.registro-container {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  height: 100vh;
+/* ===== Variantes de botón (usar junto con .btn) ===== */
+.btn-success {
+  background-color: #1a8f3c;
+}
+
+.btn-success:hover {
+  background-color: #157a32;
+}
+
+.btn-secondary {
+  background-color: #6c757d;
+}
+
+.btn-secondary:hover {
+  background-color: #5a6268;
+}
+
+.btn-warning {
+  background-color: #d97706;
+}
+
+.btn-warning:hover {
+  background-color: #b45309;
+}
+
+/* Textarea con la misma apariencia que .input */
+.textarea {
+  height: 70px;
+  padding-top: 10px;
+  resize: vertical;
+}
+
+/* Tarjeta más ancha (ej. expediente) */
+.card-lg {
+  max-width: 500px;
+}
+
+/* Texto para secciones sin información registrada */
+.sin-datos {
+  color: var(--text-muted);
+  width: 100%;
+  text-align: left;
+}
+
+/* Título de sección dentro de una tarjeta */
+.seccion-titulo {
+  margin: 20px 0 0 0;
+  align-self: flex-start;
 }
 
 /* ===== Layout con Navbar (pantallas internas) ===== */
@@ -445,7 +459,7 @@ body {
   width: 100%;
 }
 
-.fecha-grupo .login-input {
+.fecha-grupo .input {
   padding: 0 8px;
   cursor: pointer;
 }

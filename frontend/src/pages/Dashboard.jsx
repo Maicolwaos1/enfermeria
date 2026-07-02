@@ -1,8 +1,7 @@
-import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Search, UserPlus, Package } from 'lucide-react';
-import { obtenerSesion } from './lib/auth';
-import Layout from './Layout';
+import { obtenerSesion } from '../lib/auth';
+import Layout from '../components/Layout';
 
 export default function Dashboard() {
   const navigate = useNavigate();

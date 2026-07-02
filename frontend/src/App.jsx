@@ -1,12 +1,12 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
-import Login from './Login';
-import Registro from './Registro';
-import Dashboard from './Dashboard';
-import BuscarPaciente from './BuscarPaciente';
-import RegistrarPaciente from './RegistrarPaciente';
-import Expediente from './Expediente';
-import RutaProtegida from './RutaProtegida';
+import Login from './pages/Login';
+import Registro from './pages/Registro';
+import Dashboard from './pages/Dashboard';
+import BuscarPaciente from './pages/BuscarPaciente';
+import RegistrarPaciente from './pages/RegistrarPaciente';
+import Expediente from './pages/Expediente';
+import RutaProtegida from './components/RutaProtegida';
 
 export default function App() {
   return (

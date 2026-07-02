@@ -1,4 +1,3 @@
-import React from 'react';
 import Navbar from './Navbar';
 
 // Envoltura visual de las pantallas internas: pone la Navbar arriba y centra

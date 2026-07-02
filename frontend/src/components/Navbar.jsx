@@ -1,7 +1,7 @@
-import React, { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { Stethoscope, CircleUser, ChevronDown, UserPlus, RefreshCw, LogOut } from 'lucide-react';
-import { obtenerSesion, cerrarSesion } from './lib/auth';
+import { obtenerSesion, cerrarSesion } from '../lib/auth';
 
 // Barra de navegación fija que aparece en todas las pantallas internas
 // (Dashboard, Buscar, Registrar, Expediente).

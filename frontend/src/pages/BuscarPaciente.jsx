@@ -1,9 +1,9 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
-import { apiJson } from './lib/api';
-import { MAX_DIGITOS_MATRICULA } from './lib/validaciones';
-import Layout from './Layout';
+import { apiJson } from '../lib/api';
+import { MAX_DIGITOS_MATRICULA } from '../lib/validaciones';
+import Layout from '../components/Layout';
 
 export default function BuscarPaciente() {
   const navigate = useNavigate();
@@ -38,14 +38,14 @@ export default function BuscarPaciente() {
 
   return (
     <Layout>
-      <div className="login-card">
-        <h2 className="login-title">Buscar Paciente</h2>
+      <div className="card">
+        <h2 className="card-title">Buscar Paciente</h2>
 
         {/* Matrícula: el prefijo "UP" es fijo, solo se escriben los números */}
         <div className="input-group">
           <span className="input-prefix">UP</span>
           <input
-            className="login-input input-con-prefijo"
+            className="input input-con-prefijo"
             type="text"
             inputMode="numeric"
             maxLength={MAX_DIGITOS_MATRICULA}
@@ -57,7 +57,7 @@ export default function BuscarPaciente() {
         </div>
 
         <button
-          className="login-button"
+          className="btn"
           type="button"
           onClick={handleBuscar}
           disabled={cargando}
@@ -67,10 +67,9 @@ export default function BuscarPaciente() {
 
         {noEncontrado && (
           <button
-            className="login-button"
+            className="btn btn-success"
             type="button"
             onClick={() => navigate('/pacientes/nuevo')}
-            style={{ backgroundColor: '#1a8f3c' }}
           >
             + Registrar paciente nuevo
           </button>
@@ -82,7 +81,7 @@ export default function BuscarPaciente() {
             <p><strong>{paciente.nombre}</strong></p>
             <p>Matrícula: {paciente.matricula}</p>
             <button
-              className="login-button"
+              className="btn"
               type="button"
               onClick={() => navigate(`/expediente/${paciente.id}`)}
             >

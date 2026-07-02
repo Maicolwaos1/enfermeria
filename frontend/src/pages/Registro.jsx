@@ -1,9 +1,9 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
-import { apiJson } from './lib/api';
-import { esCorreoValido, MIN_PASSWORD } from './lib/validaciones';
-import Layout from './Layout';
+import { apiJson } from '../lib/api';
+import { esCorreoValido, MIN_PASSWORD } from '../lib/validaciones';
+import Layout from '../components/Layout';
 
 export default function Registro() {
   const navigate = useNavigate();
@@ -56,11 +56,11 @@ export default function Registro() {
 
   return (
     <Layout>
-      <div className="login-card">
-        <h2 className="login-title">Crear Nueva Enfermera</h2>
+      <div className="card">
+        <h2 className="card-title">Crear Nueva Enfermera</h2>
 
         <input
-          className="login-input"
+          className="input"
           type="text"
           placeholder="Nombre completo"
           value={nombre}
@@ -68,7 +68,7 @@ export default function Registro() {
         />
 
         <input
-          className="login-input"
+          className="input"
           type="text"
           placeholder="Usuario"
           value={usuario}
@@ -76,7 +76,7 @@ export default function Registro() {
         />
 
         <input
-          className={`login-input ${!correoValido ? 'input-error' : ''}`}
+          className={`input ${!correoValido ? 'input-error' : ''}`}
           type="email"
           placeholder="Correo (ej. nombre@gmail.com)"
           value={correo}
@@ -87,7 +87,7 @@ export default function Registro() {
         )}
 
         <input
-          className="login-input"
+          className="input"
           type="password"
           placeholder={`Contraseña (mínimo ${MIN_PASSWORD} caracteres)`}
           value={contrasenia}
@@ -95,7 +95,7 @@ export default function Registro() {
         />
 
         <button
-          className="login-button"
+          className="btn"
           type="button"
           onClick={handleRegistrar}
           disabled={cargando}

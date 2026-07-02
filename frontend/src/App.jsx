@@ -1,5 +1,4 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
-import { Toaster } from 'react-hot-toast';
 import Login from './pages/Login';
 import Registro from './pages/Registro';
 import Dashboard from './pages/Dashboard';
@@ -11,15 +10,7 @@ import RutaProtegida from './components/RutaProtegida';
 export default function App() {
   return (
     <BrowserRouter>
-      {/* Notificaciones tipo toast, disponibles en toda la app */}
-      <Toaster
-        position="top-center"
-        toastOptions={{
-          duration: 3000,
-          style: { fontFamily: 'Poppins, Arial, sans-serif', fontSize: '15px' },
-          success: { iconTheme: { primary: '#2563eb', secondary: '#fff' } },
-        }}
-      />
+      {/* Los avisos flotantes los pone <Notifications/> en main.jsx (lib/avisos.js) */}
       <Routes>
         {/* Rutas públicas */}
         <Route path="/" element={<Login />} />

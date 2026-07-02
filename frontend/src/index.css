@@ -1,19 +1,15 @@
-/* src/index.css */
-/* La fuente Poppins se carga desde index.html; el tema de componentes vive
-   en src/theme.js (Mantine). Aquí solo quedan el fondo y detalles globales. */
+/* src/index.css
+   La fuente Poppins se carga desde index.html y el tema de componentes vive
+   en src/theme.js (Mantine). Aquí solo quedan el fondo global, la navbar
+   (degradado propio) y un par de detalles que Mantine no cubre. */
 
-/* Paleta y tokens del tema (azul) */
+/* Tokens que siguen siendo útiles fuera de Mantine */
 :root {
   --primary: #2563eb;        /* azul principal */
   --primary-dark: #1d4ed8;   /* hover */
   --primary-darker: #1e40af; /* navbar */
   --primary-light: #dbeafe;  /* fondos suaves */
   --text: #334155;           /* texto principal (slate) */
-  --text-muted: #64748b;     /* texto secundario */
-  --border: #e2e8f0;         /* bordes */
-  --danger: #d32f2f;
-  --radius: 10px;
-  --shadow: 0 4px 16px rgba(37, 99, 235, 0.10);
 }
 
 body {
@@ -25,193 +21,29 @@ body {
   min-height: 100vh;
 }
 
+/* Mantine pone fondo blanco en AppShell; lo hacemos transparente para
+   que se vea el degradado del body */
+.mantine-AppShell-main {
+  background: transparent;
+}
+
+/* Pantalla del Login (sin navbar): centrado vertical completo */
 .login-container {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 100vh;
   min-height: 100vh;
   padding: 20px;
   box-sizing: border-box;
 }
 
-.card {
-  background-color: #ffffff;
-  padding: 40px;
-  border-radius: var(--radius);
-  box-shadow: var(--shadow);
-  border: 1px solid var(--border);
+/* Contenido debajo de la navbar, centrado en columna */
+.page-content {
   display: flex;
   flex-direction: column;
   align-items: center;
-  width: 100%;
-  max-width: 360px;
+  padding: calc(62px + 40px) 20px 40px; /* 62px = altura de la navbar */
   box-sizing: border-box;
 }
 
-.card-title {
-  margin-bottom: 20px;
-  font-size: 24px;
-  font-weight: 600;
-  color: var(--text);
-}
-
-.input {
-  width: 100%;
-  height: 46px;
-  margin-bottom: 15px;
-  padding: 0 12px;
-  border-radius: 8px;
-  border: 1px solid var(--border);
-  font-size: 16px;
-  font-family: inherit;
-  color: var(--text);
-  box-sizing: border-box;
-  transition: border-color 0.15s, box-shadow 0.15s;
-}
-
-.input:focus {
-  outline: none;
-  border-color: var(--primary);
-  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
-}
-
-.btn {
-  width: 100%;
-  height: 46px;
-  background-color: var(--primary);
-  color: white;
-  border: none;
-  border-radius: 8px;
-  font-size: 16px;
-  font-weight: 600;
-  font-family: inherit;
-  cursor: pointer;
-  margin-top: 10px;
-  transition: background-color 0.15s, transform 0.05s;
-}
-
-.btn:hover {
-  background-color: var(--primary-dark);
-}
-
-.btn:active {
-  transform: translateY(1px);
-}
-
-.btn:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
-.error-text {
-  color: var(--danger);
-  margin-top: 15px;
-  font-size: 14px;
-  font-weight: 600;
-}
-
-.resultado-paciente {
-  width: 100%;
-  margin-top: 20px;
-  padding: 15px;
-  border: 1px solid var(--primary-light);
-  border-radius: 8px;
-  background-color: #eff6ff;
-  text-align: center;
-  box-sizing: border-box;
-}
-
-.expediente-datos {
-  width: 100%;
-  text-align: left;
-  line-height: 1.7;
-}
-
-.lista-consultas {
-  width: 100%;
-  text-align: left;
-  padding-left: 20px;
-}
-
-.alerta-medica {
-  width: 100%;
-  margin-top: 20px;
-  padding: 15px;
-  border: 2px solid #d32f2f;
-  border-radius: 6px;
-  background-color: #fdecea;
-  color: #b71c1c;
-  text-align: left;
-  line-height: 1.6;
-  box-sizing: border-box;
-}
-
-.alerta-medica-titulo {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  margin: 0 0 8px 0;
-  font-weight: bold;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-
-/* ===== Variantes de botón (usar junto con .btn) ===== */
-.btn-success {
-  background-color: #1a8f3c;
-}
-
-.btn-success:hover {
-  background-color: #157a32;
-}
-
-.btn-secondary {
-  background-color: #6c757d;
-}
-
-.btn-secondary:hover {
-  background-color: #5a6268;
-}
-
-.btn-warning {
-  background-color: #d97706;
-}
-
-.btn-warning:hover {
-  background-color: #b45309;
-}
-
-/* Textarea con la misma apariencia que .input */
-.textarea {
-  height: 70px;
-  padding-top: 10px;
-  resize: vertical;
-}
-
-/* Tarjeta más ancha (ej. expediente) */
-.card-lg {
-  max-width: 500px;
-}
-
-/* Texto para secciones sin información registrada */
-.sin-datos {
-  color: var(--text-muted);
-  width: 100%;
-  text-align: left;
-}
-
-/* Título de sección dentro de una tarjeta */
-.seccion-titulo {
-  margin: 20px 0 0 0;
-  align-self: flex-start;
-}
-
-/* ===== Layout con Navbar (pantallas internas) ===== */
-.app-shell {
-  min-height: 100vh;
-}
-
+/* ===== Navbar (degradado azul propio) ===== */
 .navbar {
   display: flex;
   align-items: center;
@@ -222,28 +54,6 @@ body {
   padding: 0 24px;
   height: 100%; /* la altura la pone el AppShell.Header (62px) */
   box-shadow: 0 2px 10px rgba(37, 99, 235, 0.25);
-}
-
-/* En pantallas chicas los enlaces viven en el Drawer (hamburguesa) */
-@media (max-width: 48em) {
-  .navbar { padding: 0 14px; gap: 10px; }
-  .navbar-links { display: none; }
-}
-
-/* Enlaces dentro del panel móvil */
-.navbar-link-movil {
-  display: block;
-  padding: 12px 14px;
-  border-radius: 8px;
-  color: var(--text);
-  text-decoration: none;
-  font-size: 16px;
-}
-
-.navbar-link-movil.active {
-  background-color: var(--primary-light);
-  color: var(--primary-dark);
-  font-weight: 600;
 }
 
 .navbar-brand {
@@ -280,22 +90,38 @@ body {
   font-weight: bold;
 }
 
-/* ===== Menú de cuenta (esquina superior derecha) ===== */
-.navbar-cuenta {
-  position: relative;
+/* En pantallas chicas los enlaces viven en el Drawer (hamburguesa) */
+@media (max-width: 48em) {
+  .navbar { padding: 0 14px; gap: 10px; }
+  .navbar-links { display: none; }
 }
 
+/* Enlaces dentro del panel móvil */
+.navbar-link-movil {
+  display: block;
+  padding: 12px 14px;
+  border-radius: 8px;
+  color: var(--text);
+  text-decoration: none;
+  font-size: 16px;
+}
+
+.navbar-link-movil.active {
+  background-color: var(--primary-light);
+  color: var(--primary-dark);
+  font-weight: 600;
+}
+
+/* Botón del menú de cuenta (esquina superior derecha) */
 .cuenta-boton {
   display: inline-flex;
   align-items: center;
   gap: 8px;
   background-color: rgba(255, 255, 255, 0.15);
   color: #ffffff;
-  border: none;
   border-radius: 6px;
   padding: 8px 12px;
   font-size: 15px;
-  cursor: pointer;
 }
 
 .cuenta-boton:hover {
@@ -309,90 +135,7 @@ body {
   text-overflow: ellipsis;
 }
 
-.cuenta-menu {
-  position: absolute;
-  top: calc(100% + 8px);
-  right: 0;
-  min-width: 230px;
-  background-color: #ffffff;
-  border: 1px solid #e2e2e2;
-  border-radius: 8px;
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.15);
-  padding: 6px;
-  z-index: 20;
-}
-
-.cuenta-menu-header {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  padding: 10px 12px;
-  border-bottom: 1px solid #eee;
-  color: #333;
-  margin-bottom: 6px;
-}
-
-.cuenta-badge {
-  align-self: flex-start;
-  font-size: 12px;
-  font-weight: 600;
-  color: #555;
-  background-color: #eef1f4;
-  padding: 2px 8px;
-  border-radius: 10px;
-}
-
-.cuenta-badge.badge-admin {
-  color: #ffffff;
-  background-color: var(--primary);
-}
-
-.cuenta-menu-item {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  width: 100%;
-  background: none;
-  border: none;
-  border-radius: 6px;
-  padding: 10px 12px;
-  font-size: 15px;
-  color: #333;
-  text-align: left;
-  cursor: pointer;
-}
-
-.cuenta-menu-item:hover {
-  background-color: #f2f4f7;
-}
-
-.cuenta-menu-salir {
-  color: #d32f2f;
-}
-
-/* Contenedor del contenido debajo de la navbar */
-.page-content {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 40px 20px;
-  box-sizing: border-box;
-}
-
-.page-title {
-  color: var(--text);
-  font-weight: 600;
-  margin: 0 0 4px 0;
-  text-align: center;
-}
-
-.page-subtitle {
-  color: var(--text-muted);
-  margin: 0 0 32px 0;
-  text-align: center;
-}
-
-/* Tarjetas de acción del Dashboard (Mantine Card + estas clases) */
+/* ===== Tarjetas de acción del Dashboard (Mantine Card + estas clases) ===== */
 .dash-card-on {
   cursor: pointer;
   transition: transform 0.14s, box-shadow 0.14s;
@@ -406,169 +149,4 @@ body {
 .dash-card-off {
   opacity: 0.55;
   cursor: not-allowed;
-}
-
-/* ===== Tarjetas del Dashboard ===== */
-.dashboard-cards {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 20px;
-  justify-content: center;
-  width: 100%;
-  max-width: 800px;
-}
-
-.dash-card {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  text-align: center;
-  gap: 10px;
-  width: 220px;
-  padding: 30px 22px;
-  background-color: #ffffff;
-  border: 1px solid var(--border);
-  border-radius: 14px;
-  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.06);
-  cursor: pointer;
-  transition: transform 0.14s, box-shadow 0.14s, border-color 0.14s;
-  font-family: inherit;
-}
-
-.dash-card:hover {
-  transform: translateY(-4px);
-  border-color: var(--primary-light);
-  box-shadow: 0 10px 22px rgba(37, 99, 235, 0.16);
-}
-
-.dash-card-icon {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 60px;
-  height: 60px;
-  border-radius: 50%;
-  background-color: var(--primary-light);
-  color: var(--primary-dark);
-}
-
-.dash-card-titulo {
-  font-size: 18px;
-  font-weight: 600;
-  color: var(--text);
-}
-
-.dash-card-desc {
-  font-size: 14px;
-  color: var(--text-muted);
-}
-
-.dash-card-disabled {
-  cursor: not-allowed;
-  opacity: 0.55;
-}
-
-.dash-card-disabled:hover {
-  transform: none;
-  border-color: var(--border);
-  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.06);
-}
-
-/* ===== Edición de alergias en el expediente ===== */
-.editar-alergias {
-  width: 100%;
-  display: flex;
-  flex-direction: column;
-  margin-top: 15px;
-}
-
-.campo-label {
-  align-self: flex-start;
-  font-size: 14px;
-  font-weight: 600;
-  color: #444;
-  margin-bottom: 6px;
-}
-
-/* Fecha de nacimiento: tres desplegables (día, mes, año) en una fila */
-.fecha-grupo {
-  display: flex;
-  gap: 8px;
-  width: 100%;
-}
-
-.fecha-grupo .input {
-  padding: 0 8px;
-  cursor: pointer;
-}
-
-/* ===== Validación de campos (correo y matrícula) ===== */
-
-/* Grupo con prefijo fijo (ej. "UP" en la matrícula) */
-.input-group {
-  display: flex;
-  width: 100%;
-  margin-bottom: 15px;
-}
-
-.input-prefix {
-  display: flex;
-  align-items: center;
-  padding: 0 14px;
-  height: 46px;
-  background-color: var(--primary-light);
-  border: 1px solid var(--border);
-  border-right: none;
-  border-radius: 8px 0 0 8px;
-  font-weight: 600;
-  color: var(--primary-dark);
-  box-sizing: border-box;
-}
-
-/* El input que va pegado al prefijo pierde el borde redondo izquierdo */
-.input-con-prefijo {
-  margin-bottom: 0;
-  border-radius: 0 8px 8px 0;
-}
-
-/* Campo con dato inválido (ej. correo mal escrito) */
-.input-error {
-  border-color: #d32f2f;
-  background-color: #fdecea;
-}
-
-.campo-error {
-  align-self: flex-start;
-  color: #d32f2f;
-  font-size: 13px;
-  margin: -8px 0 12px 0;
-}
-
-/* ===== Pregunta Sí / No (alergias, enfermedades crónicas) ===== */
-.pregunta-grupo {
-  width: 100%;
-  display: flex;
-  flex-direction: column;
-  margin-bottom: 15px;
-}
-
-.opciones-siNo {
-  display: flex;
-  gap: 20px;
-  margin-top: 4px;
-}
-
-.opcion-radio {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 15px;
-  color: #333;
-  cursor: pointer;
-}
-
-.opcion-radio input {
-  cursor: pointer;
-  width: 16px;
-  height: 16px;
 }

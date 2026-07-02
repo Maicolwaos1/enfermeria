@@ -392,6 +392,22 @@ body {
   text-align: center;
 }
 
+/* Tarjetas de acción del Dashboard (Mantine Card + estas clases) */
+.dash-card-on {
+  cursor: pointer;
+  transition: transform 0.14s, box-shadow 0.14s;
+}
+
+.dash-card-on:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 10px 22px rgba(37, 99, 235, 0.16);
+}
+
+.dash-card-off {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
 /* ===== Tarjetas del Dashboard ===== */
 .dashboard-cards {
   display: flex;

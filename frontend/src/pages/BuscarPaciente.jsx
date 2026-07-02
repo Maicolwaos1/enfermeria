@@ -1,8 +1,10 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import toast from 'react-hot-toast';
+import { Paper, Title, TextInput, Button, Text, Alert, Stack } from '@mantine/core';
+import { UserRoundSearch } from 'lucide-react';
 import { apiJson } from '../lib/api';
 import { MAX_DIGITOS_MATRICULA } from '../lib/validaciones';
+import { error } from '../lib/avisos';
 import Layout from '../components/Layout';
 
 export default function BuscarPaciente() {
@@ -14,9 +16,10 @@ export default function BuscarPaciente() {
   const [noEncontrado, setNoEncontrado] = useState(false);
   const [cargando, setCargando] = useState(false);
 
-  const handleBuscar = async () => {
+  const handleBuscar = async (e) => {
+    e.preventDefault();
     if (!matriculaNum) {
-      toast.error('Escribe una matrícula');
+      error('Escribe una matrícula');
       return;
     }
 
@@ -28,9 +31,9 @@ export default function BuscarPaciente() {
       // Reconstruimos la matrícula completa con el prefijo fijo "UP"
       const datos = await apiJson(`/api/pacientes/UP${matriculaNum}`);
       setPaciente(datos);
-    } catch (error) {
-      toast.error(error.message);
-      if (error.status === 404) setNoEncontrado(true);
+    } catch (e2) {
+      error(e2.message);
+      if (e2.status === 404) setNoEncontrado(true);
     } finally {
       setCargando(false);
     }
@@ -38,58 +41,58 @@ export default function BuscarPaciente() {
 
   return (
     <Layout>
-      <div className="card">
-        <h2 className="card-title">Buscar Paciente</h2>
+      <Paper shadow="md" radius="md" p={40} withBorder w="100%" maw={380}>
+        <Title order={3} ta="center" mb="lg">Buscar Paciente</Title>
 
-        {/* Matrícula: el prefijo "UP" es fijo, solo se escriben los números */}
-        <div className="input-group">
-          <span className="input-prefix">UP</span>
-          <input
-            className="input input-con-prefijo"
-            type="text"
-            inputMode="numeric"
-            maxLength={MAX_DIGITOS_MATRICULA}
-            placeholder="240231"
-            value={matriculaNum}
-            onChange={(e) => setMatriculaNum(e.target.value.replace(/\D/g, ''))}
-            onKeyDown={(e) => e.key === 'Enter' && handleBuscar()}
-          />
-        </div>
+        <form onSubmit={handleBuscar}>
+          <Stack>
+            {/* Matrícula: el prefijo "UP" es fijo, solo se escriben los números */}
+            <TextInput
+              label="Matrícula"
+              placeholder="240231"
+              inputMode="numeric"
+              maxLength={MAX_DIGITOS_MATRICULA}
+              leftSection={<Text size="sm" fw={600} c="azul.7">UP</Text>}
+              leftSectionWidth={42}
+              value={matriculaNum}
+              onChange={(e2) => setMatriculaNum(e2.target.value.replace(/\D/g, ''))}
+            />
 
-        <button
-          className="btn"
-          type="button"
-          onClick={handleBuscar}
-          disabled={cargando}
-        >
-          {cargando ? 'Buscando...' : 'Buscar'}
-        </button>
+            <Button type="submit" fullWidth loading={cargando}>
+              Buscar
+            </Button>
 
-        {noEncontrado && (
-          <button
-            className="btn btn-success"
-            type="button"
-            onClick={() => navigate('/pacientes/nuevo')}
-          >
-            + Registrar paciente nuevo
-          </button>
-        )}
+            {noEncontrado && (
+              <Button
+                fullWidth
+                color="green"
+                variant="light"
+                onClick={() => navigate('/pacientes/nuevo')}
+              >
+                + Registrar paciente nuevo
+              </Button>
+            )}
+          </Stack>
+        </form>
 
         {/* Resultado de la búsqueda */}
         {paciente && (
-          <div className="resultado-paciente">
-            <p><strong>{paciente.nombre}</strong></p>
-            <p>Matrícula: {paciente.matricula}</p>
-            <button
-              className="btn"
-              type="button"
-              onClick={() => navigate(`/expediente/${paciente.id}`)}
-            >
-              Ver expediente
-            </button>
-          </div>
+          <Alert
+            mt="lg"
+            radius="md"
+            color="azul"
+            icon={<UserRoundSearch size={18} />}
+            title={paciente.nombre}
+          >
+            <Stack gap="xs" align="flex-start">
+              <Text size="sm">Matrícula: {paciente.matricula}</Text>
+              <Button size="xs" onClick={() => navigate(`/expediente/${paciente.id}`)}>
+                Ver expediente
+              </Button>
+            </Stack>
+          </Alert>
         )}
-      </div>
+      </Paper>
     </Layout>
   );
 }

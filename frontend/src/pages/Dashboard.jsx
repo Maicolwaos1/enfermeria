@@ -1,7 +1,30 @@
 import { useNavigate } from 'react-router-dom';
+import { Title, Text, SimpleGrid, Card, ThemeIcon, Stack } from '@mantine/core';
 import { Search, UserPlus, Package } from 'lucide-react';
 import { obtenerSesion } from '../lib/auth';
 import Layout from '../components/Layout';
+
+// Tarjeta de acción del tablero (clicable salvo que esté deshabilitada)
+function TarjetaAccion({ icono, titulo, descripcion, onClick, deshabilitada = false }) {
+  return (
+    <Card
+      withBorder
+      radius="lg"
+      padding="xl"
+      className={deshabilitada ? 'dash-card-off' : 'dash-card-on'}
+      onClick={deshabilitada ? undefined : onClick}
+      aria-disabled={deshabilitada}
+    >
+      <Stack align="center" gap="sm">
+        <ThemeIcon size={60} radius="xl" variant="light" color={deshabilitada ? 'gray' : 'azul'}>
+          {icono}
+        </ThemeIcon>
+        <Text fw={600} size="lg" ta="center">{titulo}</Text>
+        <Text size="sm" c="dimmed" ta="center">{descripcion}</Text>
+      </Stack>
+    </Card>
+  );
+}
 
 export default function Dashboard() {
   const navigate = useNavigate();
@@ -9,29 +32,30 @@ export default function Dashboard() {
 
   return (
     <Layout>
-      <h1 className="page-title">Bienvenida, {nombre}</h1>
-      <p className="page-subtitle">¿Qué deseas hacer hoy?</p>
+      <Title order={2} ta="center" mb={4}>Bienvenida, {nombre}</Title>
+      <Text c="dimmed" ta="center" mb="xl">¿Qué deseas hacer hoy?</Text>
 
-      <div className="dashboard-cards">
-        <button className="dash-card" type="button" onClick={() => navigate('/buscar')}>
-          <span className="dash-card-icon"><Search size={34} strokeWidth={1.75} /></span>
-          <span className="dash-card-titulo">Buscar paciente</span>
-          <span className="dash-card-desc">Encuentra un expediente por matrícula.</span>
-        </button>
-
-        <button className="dash-card" type="button" onClick={() => navigate('/pacientes/nuevo')}>
-          <span className="dash-card-icon"><UserPlus size={34} strokeWidth={1.75} /></span>
-          <span className="dash-card-titulo">Registrar paciente</span>
-          <span className="dash-card-desc">Da de alta a un alumno o personal nuevo.</span>
-        </button>
-
-        {/* Funciones que llegan en sprints posteriores (se dejan visibles pero deshabilitadas) */}
-        <div className="dash-card dash-card-disabled" aria-disabled="true">
-          <span className="dash-card-icon"><Package size={34} strokeWidth={1.75} /></span>
-          <span className="dash-card-titulo">Inventario</span>
-          <span className="dash-card-desc">Próximamente (Sprint 6).</span>
-        </div>
-      </div>
+      <SimpleGrid cols={{ base: 1, xs: 2, md: 3 }} spacing="lg" w="100%" maw={800}>
+        <TarjetaAccion
+          icono={<Search size={30} strokeWidth={1.75} />}
+          titulo="Buscar paciente"
+          descripcion="Encuentra un expediente por matrícula."
+          onClick={() => navigate('/buscar')}
+        />
+        <TarjetaAccion
+          icono={<UserPlus size={30} strokeWidth={1.75} />}
+          titulo="Registrar paciente"
+          descripcion="Da de alta a un alumno o personal nuevo."
+          onClick={() => navigate('/pacientes/nuevo')}
+        />
+        {/* Funciones que llegan en sprints posteriores (visibles pero deshabilitadas) */}
+        <TarjetaAccion
+          icono={<Package size={30} strokeWidth={1.75} />}
+          titulo="Inventario"
+          descripcion="Próximamente (Sprint 6)."
+          deshabilitada
+        />
+      </SimpleGrid>
     </Layout>
   );
 }

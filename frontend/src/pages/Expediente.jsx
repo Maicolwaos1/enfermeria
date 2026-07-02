@@ -1,8 +1,11 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import {
+  Paper, Title, Text, Alert, Textarea, Button, Stack, Group, Divider, Loader, Center,
+} from '@mantine/core';
 import { TriangleAlert } from 'lucide-react';
-import toast from 'react-hot-toast';
 import { apiJson } from '../lib/api';
+import { exito, error } from '../lib/avisos';
 import Layout from '../components/Layout';
 
 // Muestra la fecha de nacimiento como día/mes/año (sin la hora que trae el ISO)
@@ -12,6 +15,16 @@ function formatearFecha(valor) {
   const [anio, mes, dia] = soloFecha.split('-');
   if (!anio || !mes || !dia) return valor;
   return `${dia}/${mes}/${anio}`;
+}
+
+// Renglón etiqueta + valor de los datos generales
+function Dato({ etiqueta, valor }) {
+  return (
+    <Group gap={8} wrap="nowrap" align="baseline">
+      <Text size="sm" fw={600} w={150} style={{ flexShrink: 0 }}>{etiqueta}</Text>
+      <Text size="sm">{valor}</Text>
+    </Group>
+  );
 }
 
 export default function Expediente() {
@@ -35,8 +48,8 @@ export default function Expediente() {
         const datos = await apiJson(`/api/pacientes/${id}/expediente`);
         setPaciente(datos.paciente);
         setConsultas(datos.consultas || []);
-      } catch (error) {
-        setMensajeError(error.message);
+      } catch (e) {
+        setMensajeError(e.message);
       } finally {
         setCargando(false);
       }
@@ -70,9 +83,9 @@ export default function Expediente() {
         enfermedades_cronicas: enfermedadesCronicas,
       });
       setEditando(false);
-      toast.success('Alergias actualizadas');
-    } catch (error) {
-      toast.error(error.message);
+      exito('Alergias actualizadas');
+    } catch (e) {
+      error(e.message);
     } finally {
       setGuardando(false);
     }
@@ -81,7 +94,7 @@ export default function Expediente() {
   if (cargando) {
     return (
       <Layout>
-        <div className="card"><p>Cargando expediente...</p></div>
+        <Center mt="xl"><Loader /></Center>
       </Layout>
     );
   }
@@ -89,110 +102,112 @@ export default function Expediente() {
   if (mensajeError && !paciente) {
     return (
       <Layout>
-        <div className="card">
-          <p className="error-text">{mensajeError}</p>
-          <button className="btn" type="button" onClick={() => navigate('/buscar')}>
-            Volver a buscar
-          </button>
-        </div>
+        <Paper shadow="md" radius="md" p={40} withBorder w="100%" maw={380}>
+          <Stack>
+            <Text c="red" fw={600} ta="center">{mensajeError}</Text>
+            <Button fullWidth onClick={() => navigate('/buscar')}>
+              Volver a buscar
+            </Button>
+          </Stack>
+        </Paper>
       </Layout>
     );
   }
 
   return (
     <Layout>
-      <div className="card card-lg">
-        <h2 className="card-title">Expediente del Paciente</h2>
+      <Paper shadow="md" radius="md" p={40} withBorder w="100%" maw={520}>
+        <Title order={3} ta="center" mb="lg">Expediente del Paciente</Title>
 
         {/* Datos generales */}
-        <div className="expediente-datos">
-          <p><strong>Nombre:</strong> {paciente.nombre}</p>
-          <p><strong>Matrícula:</strong> {paciente.matricula}</p>
-          <p><strong>Fecha de nacimiento:</strong> {formatearFecha(paciente.fecha_nacimiento)}</p>
-          <p><strong>Correo:</strong> {paciente.correo || 'No registrado'}</p>
-          <p><strong>Teléfono:</strong> {paciente.telefono || 'No registrado'}</p>
-        </div>
+        <Stack gap={6}>
+          <Dato etiqueta="Nombre:" valor={paciente.nombre} />
+          <Dato etiqueta="Matrícula:" valor={paciente.matricula} />
+          <Dato etiqueta="Fecha de nacimiento:" valor={formatearFecha(paciente.fecha_nacimiento)} />
+          <Dato etiqueta="Correo:" valor={paciente.correo || 'No registrado'} />
+          <Dato etiqueta="Teléfono:" valor={paciente.telefono || 'No registrado'} />
+        </Stack>
 
         {/* Alergias y enfermedades crónicas resaltadas en rojo (Sprint 4) */}
         {!editando && (paciente.alergias || paciente.enfermedades_cronicas) && (
-          <div className="alerta-medica">
-            <p className="alerta-medica-titulo">
-              <TriangleAlert size={16} strokeWidth={2.25} />
-              Alertas médicas
-            </p>
-            {paciente.alergias && (
-              <p><strong>Alergias:</strong> {paciente.alergias}</p>
-            )}
-            {paciente.enfermedades_cronicas && (
-              <p><strong>Enfermedades crónicas:</strong> {paciente.enfermedades_cronicas}</p>
-            )}
-          </div>
+          <Alert
+            mt="lg"
+            radius="md"
+            color="red"
+            variant="light"
+            icon={<TriangleAlert size={18} strokeWidth={2.25} />}
+            title="ALERTAS MÉDICAS"
+          >
+            <Stack gap={4}>
+              {paciente.alergias && (
+                <Text size="sm"><strong>Alergias:</strong> {paciente.alergias}</Text>
+              )}
+              {paciente.enfermedades_cronicas && (
+                <Text size="sm">
+                  <strong>Enfermedades crónicas:</strong> {paciente.enfermedades_cronicas}
+                </Text>
+              )}
+            </Stack>
+          </Alert>
         )}
 
         {/* Si no hay alergias registradas y no estamos editando, lo indicamos */}
         {!editando && !paciente.alergias && !paciente.enfermedades_cronicas && (
-          <p className="sin-datos">
+          <Text size="sm" c="dimmed" mt="md">
             Sin alergias ni enfermedades crónicas registradas.
-          </p>
+          </Text>
         )}
 
         {/* Formulario de edición de alergias */}
         {editando ? (
-          <div className="editar-alergias">
-            <label className="campo-label">Alergias</label>
-            <textarea
-              className="input textarea"
+          <Stack mt="md">
+            <Textarea
+              label="Alergias"
+              autosize
+              minRows={2}
               placeholder="Ej. penicilina, nueces"
               value={alergias}
               onChange={(e) => setAlergias(e.target.value)}
             />
-            <label className="campo-label">Enfermedades crónicas</label>
-            <textarea
-              className="input textarea"
+            <Textarea
+              label="Enfermedades crónicas"
+              autosize
+              minRows={2}
               placeholder="Ej. asma, diabetes"
               value={enfermedadesCronicas}
               onChange={(e) => setEnfermedadesCronicas(e.target.value)}
             />
-            <button
-              className="btn"
-              type="button"
-              onClick={guardarAlergias}
-              disabled={guardando}
-            >
-              {guardando ? 'Guardando...' : 'Guardar'}
-            </button>
-            <button
-              className="btn btn-secondary"
-              type="button"
-              onClick={() => setEditando(false)}
-            >
-              Cancelar
-            </button>
-          </div>
+            <Group grow>
+              <Button color="gray" variant="light" onClick={() => setEditando(false)}>
+                Cancelar
+              </Button>
+              <Button loading={guardando} onClick={guardarAlergias}>
+                Guardar
+              </Button>
+            </Group>
+          </Stack>
         ) : (
-          <button
-            className="btn btn-warning"
-            type="button"
-            onClick={abrirEdicion}
-          >
+          <Button fullWidth mt="md" color="orange" variant="light" onClick={abrirEdicion}>
             Editar alergias
-          </button>
+          </Button>
         )}
 
         {/* Historial de consultas */}
-        <h3 className="seccion-titulo">Historial de consultas</h3>
+        <Divider my="lg" />
+        <Title order={5} mb="xs">Historial de consultas</Title>
         {consultas.length === 0 ? (
-          <p className="sin-datos">Aún no hay consultas registradas.</p>
+          <Text size="sm" c="dimmed">Aún no hay consultas registradas.</Text>
         ) : (
-          <ul className="lista-consultas">
+          <Stack gap="xs">
             {consultas.map((c) => (
-              <li key={c.id}>
-                <strong>{c.hora_entrada}</strong> — {c.diagnostico || 'Sin diagnóstico'}
-              </li>
+              <Paper key={c.id} withBorder radius="md" p="sm">
+                <Text size="sm" fw={600}>{formatearFecha(c.hora_entrada)}</Text>
+                <Text size="sm">{c.diagnostico || 'Sin diagnóstico'}</Text>
+              </Paper>
             ))}
-          </ul>
+          </Stack>
         )}
-      </div>
+      </Paper>
     </Layout>
   );
 }

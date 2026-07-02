@@ -1,107 +1,82 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import toast from 'react-hot-toast';
+import { Paper, Title, TextInput, Textarea, Button, Stack, Radio, Group, Text } from '@mantine/core';
+import { DatePickerInput } from '@mantine/dates';
+import { useForm } from '@mantine/form';
 import { apiJson } from '../lib/api';
-import { esCorreoValido, esMatriculaValida, MAX_DIGITOS_MATRICULA } from '../lib/validaciones';
+import { REGEX_CORREO, esMatriculaValida, MAX_DIGITOS_MATRICULA } from '../lib/validaciones';
+import { exito, error } from '../lib/avisos';
 import Layout from '../components/Layout';
+
+// Convierte el valor del DatePicker a 'AAAA-MM-DD' (o '' si está vacío)
+function fechaParaBackend(valor) {
+  if (!valor) return '';
+  if (typeof valor === 'string') return valor.slice(0, 10);
+  const anio = valor.getFullYear();
+  const mes = String(valor.getMonth() + 1).padStart(2, '0');
+  const dia = String(valor.getDate()).padStart(2, '0');
+  return `${anio}-${mes}-${dia}`;
+}
 
 export default function RegistrarPaciente() {
   const navigate = useNavigate();
-
-  const [nombre, setNombre] = useState('');
-  // Solo guardamos los números; el prefijo "UP" es fijo (ej. UP240231)
-  const [matriculaNum, setMatriculaNum] = useState('');
-  // Fecha de nacimiento con tres desplegables (más intuitivo que el calendario)
-  const [dia, setDia] = useState('');
-  const [mes, setMes] = useState('');
-  const [anio, setAnio] = useState('');
-  const [correo, setCorreo] = useState('');
-  const [telefono, setTelefono] = useState('');
-  // ¿Tiene alergias / enfermedades crónicas? Solo si es "Sí" se muestra el texto
-  const [tieneAlergias, setTieneAlergias] = useState(false);
-  const [alergias, setAlergias] = useState('');
-  const [tieneCronicas, setTieneCronicas] = useState(false);
-  const [enfermedadesCronicas, setEnfermedadesCronicas] = useState('');
-
   const [cargando, setCargando] = useState(false);
 
-  const correoValido = esCorreoValido(correo);
+  // Mismas reglas que el backend (backend/validaciones/pacientes.js);
+  // los errores salen inline debajo de cada campo
+  const form = useForm({
+    initialValues: {
+      nombre: '',
+      matriculaNum: '', // solo los números; el prefijo "UP" es fijo
+      fechaNacimiento: null,
+      correo: '',
+      telefono: '',
+      tieneAlergias: 'no',
+      alergias: '',
+      tieneCronicas: 'no',
+      enfermedadesCronicas: '',
+    },
+    validate: {
+      nombre: (v) => (v.trim().length >= 2 ? null : 'Escribe el nombre completo'),
+      matriculaNum: (v) =>
+        esMatriculaValida(v) ? null : 'La matrícula debe tener de 4 a 10 dígitos',
+      correo: (v) =>
+        v === '' || REGEX_CORREO.test(v) ? null : 'Formato de correo no válido',
+      telefono: (v) =>
+        v === '' || /^\d{10}$/.test(v) ? null : 'El teléfono debe tener 10 dígitos',
+      alergias: (v, valores) =>
+        valores.tieneAlergias === 'si' && !v.trim()
+          ? 'Especifica las alergias o marca "No"'
+          : null,
+      enfermedadesCronicas: (v, valores) =>
+        valores.tieneCronicas === 'si' && !v.trim()
+          ? 'Especifica las enfermedades crónicas o marca "No"'
+          : null,
+    },
+  });
 
-  // Opciones para los desplegables de la fecha de nacimiento
-  const meses = [
-    'enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio',
-    'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre',
-  ];
-  const anioActual = new Date().getFullYear();
-  const anios = Array.from({ length: anioActual - 1919 }, (_, i) => anioActual - i);
-  // Días válidos según el mes y año elegidos (para no ofrecer 31 en febrero, etc.)
-  const diasEnMes = mes && anio ? new Date(Number(anio), Number(mes), 0).getDate() : 31;
-  const dias = Array.from({ length: diasEnMes }, (_, i) => i + 1);
-
-  const handleRegistrar = async () => {
-    // Nombre y matrícula son obligatorios; el resto es opcional
-    if (!nombre || !matriculaNum) {
-      toast.error('El nombre y la matrícula son obligatorios');
-      return;
-    }
-
-    // Misma regla que el backend: UP + 4 a 10 dígitos
-    if (!esMatriculaValida(matriculaNum)) {
-      toast.error('La matrícula debe tener de 4 a 10 dígitos');
-      return;
-    }
-
-    // El correo es opcional, pero si lo escriben debe tener formato válido
-    if (!correoValido) {
-      toast.error('Escribe un correo válido (ej. nombre@gmail.com)');
-      return;
-    }
-
-    // Si marcaron "Sí" pero no escribieron nada, pedimos el detalle
-    if (tieneAlergias && !alergias.trim()) {
-      toast.error('Especifica las alergias o marca "No"');
-      return;
-    }
-    if (tieneCronicas && !enfermedadesCronicas.trim()) {
-      toast.error('Especifica las enfermedades crónicas o marca "No"');
-      return;
-    }
-
-    // La fecha es opcional, pero si empezaron a llenarla debe estar completa
-    if ((dia || mes || anio) && !(dia && mes && anio)) {
-      toast.error('Completa la fecha de nacimiento (día, mes y año)');
-      return;
-    }
-
+  const handleRegistrar = async (valores) => {
     setCargando(true);
-
-    // Reconstruimos la matrícula completa con el prefijo fijo "UP"
-    const matricula = `UP${matriculaNum}`;
-
-    // Armamos la fecha en formato YYYY-MM-DD que espera el backend
-    const fechaNacimiento = dia && mes && anio
-      ? `${anio}-${String(mes).padStart(2, '0')}-${String(dia).padStart(2, '0')}`
-      : '';
-
     try {
       const datos = await apiJson('/api/pacientes', {
         method: 'POST',
         body: {
-          nombre,
-          matricula,
-          fecha_nacimiento: fechaNacimiento,
-          correo,
-          telefono,
-          alergias,
-          enfermedades_cronicas: enfermedadesCronicas,
+          nombre: valores.nombre,
+          matricula: `UP${valores.matriculaNum}`,
+          fecha_nacimiento: fechaParaBackend(valores.fechaNacimiento),
+          correo: valores.correo,
+          telefono: valores.telefono,
+          // Si la respuesta fue "No", se manda vacío aunque haya texto viejo
+          alergias: valores.tieneAlergias === 'si' ? valores.alergias : '',
+          enfermedades_cronicas: valores.tieneCronicas === 'si' ? valores.enfermedadesCronicas : '',
         },
       });
 
       // Al guardar, vamos directo al expediente del paciente nuevo
-      toast.success('Paciente registrado correctamente');
+      exito('Paciente registrado correctamente');
       navigate(`/expediente/${datos.id}`);
-    } catch (error) {
-      toast.error(error.message);
+    } catch (e) {
+      error(e.message);
     } finally {
       setCargando(false);
     }
@@ -109,161 +84,99 @@ export default function RegistrarPaciente() {
 
   return (
     <Layout>
-      <div className="card">
-        <h2 className="card-title">Registrar Paciente</h2>
+      <Paper shadow="md" radius="md" p={40} withBorder w="100%" maw={420}>
+        <Title order={3} ta="center" mb="lg">Registrar Paciente</Title>
 
-        <input
-          className="input"
-          type="text"
-          placeholder="Nombre completo"
-          value={nombre}
-          onChange={(e) => setNombre(e.target.value)}
-        />
+        <form onSubmit={form.onSubmit(handleRegistrar)}>
+          <Stack>
+            <TextInput
+              label="Nombre completo"
+              placeholder="Ej. Juan Pérez García"
+              {...form.getInputProps('nombre')}
+            />
 
-        {/* Matrícula: el prefijo "UP" es fijo, solo se rellenan los números */}
-        <div className="input-group">
-          <span className="input-prefix">UP</span>
-          <input
-            className="input input-con-prefijo"
-            type="text"
-            inputMode="numeric"
-            maxLength={MAX_DIGITOS_MATRICULA}
-            placeholder="240231"
-            value={matriculaNum}
-            onChange={(e) => setMatriculaNum(e.target.value.replace(/\D/g, ''))}
-          />
-        </div>
+            {/* Matrícula: el prefijo "UP" es fijo, solo se escriben los números */}
+            <TextInput
+              label="Matrícula"
+              placeholder="240231"
+              inputMode="numeric"
+              maxLength={MAX_DIGITOS_MATRICULA}
+              leftSection={<Text size="sm" fw={600} c="azul.7">UP</Text>}
+              leftSectionWidth={42}
+              {...form.getInputProps('matriculaNum')}
+              onChange={(e) =>
+                form.setFieldValue('matriculaNum', e.target.value.replace(/\D/g, ''))
+              }
+            />
 
-        {/* Fecha de nacimiento con desplegables: más rápido que el calendario */}
-        <span className="campo-label">Fecha de nacimiento</span>
-        <div className="fecha-grupo">
-          <select
-            className="input"
-            value={dia}
-            onChange={(e) => setDia(e.target.value)}
-          >
-            <option value="">Día</option>
-            {dias.map((d) => (
-              <option key={d} value={d}>{d}</option>
-            ))}
-          </select>
-          <select
-            className="input"
-            value={mes}
-            onChange={(e) => setMes(e.target.value)}
-          >
-            <option value="">Mes</option>
-            {meses.map((nombreMes, i) => (
-              <option key={nombreMes} value={i + 1}>{nombreMes}</option>
-            ))}
-          </select>
-          <select
-            className="input"
-            value={anio}
-            onChange={(e) => setAnio(e.target.value)}
-          >
-            <option value="">Año</option>
-            {anios.map((a) => (
-              <option key={a} value={a}>{a}</option>
-            ))}
-          </select>
-        </div>
+            {/* Calendario en español; se abre en vista de década para llegar
+                rápido al año de nacimiento */}
+            <DatePickerInput
+              label="Fecha de nacimiento (opcional)"
+              placeholder="Selecciona la fecha"
+              locale="es"
+              clearable
+              defaultLevel="decade"
+              maxDate={new Date()}
+              {...form.getInputProps('fechaNacimiento')}
+            />
 
-        <input
-          className={`input ${!correoValido ? 'input-error' : ''}`}
-          type="email"
-          placeholder="Correo (ej. nombre@gmail.com)"
-          value={correo}
-          onChange={(e) => setCorreo(e.target.value)}
-        />
-        {!correoValido && (
-          <p className="campo-error">Formato de correo no válido</p>
-        )}
+            <TextInput
+              label="Correo (opcional)"
+              placeholder="nombre@gmail.com"
+              type="email"
+              {...form.getInputProps('correo')}
+            />
 
-        <input
-          className="input"
-          type="tel"
-          placeholder="Teléfono (10 dígitos)"
-          maxLength={10}
-          value={telefono}
-          onChange={(e) => setTelefono(e.target.value.replace(/\D/g, ''))}
-        />
+            <TextInput
+              label="Teléfono (opcional)"
+              placeholder="10 dígitos"
+              inputMode="numeric"
+              maxLength={10}
+              {...form.getInputProps('telefono')}
+              onChange={(e) =>
+                form.setFieldValue('telefono', e.target.value.replace(/\D/g, ''))
+              }
+            />
 
-        {/* ¿Tiene alergias? Solo si es "Sí" se muestra el campo de texto */}
-        <div className="pregunta-grupo">
-          <span className="campo-label">¿Tiene alergias?</span>
-          <div className="opciones-siNo">
-            <label className="opcion-radio">
-              <input
-                type="radio"
-                name="alergias"
-                checked={tieneAlergias === true}
-                onChange={() => setTieneAlergias(true)}
+            {/* ¿Tiene alergias? Solo si es "Sí" se muestra el campo de texto */}
+            <Radio.Group label="¿Tiene alergias?" {...form.getInputProps('tieneAlergias')}>
+              <Group mt={6}>
+                <Radio value="si" label="Sí" />
+                <Radio value="no" label="No" />
+              </Group>
+            </Radio.Group>
+            {form.values.tieneAlergias === 'si' && (
+              <Textarea
+                autosize
+                minRows={2}
+                placeholder="¿Cuáles? (ej. penicilina, nueces)"
+                {...form.getInputProps('alergias')}
               />
-              Sí
-            </label>
-            <label className="opcion-radio">
-              <input
-                type="radio"
-                name="alergias"
-                checked={tieneAlergias === false}
-                onChange={() => { setTieneAlergias(false); setAlergias(''); }}
-              />
-              No
-            </label>
-          </div>
-        </div>
-        {tieneAlergias && (
-          <textarea
-            className="input textarea"
-            placeholder="¿Cuáles? (ej. penicilina, nueces)"
-            value={alergias}
-            onChange={(e) => setAlergias(e.target.value)}
-          />
-        )}
+            )}
 
-        {/* ¿Tiene enfermedades crónicas? Mismo comportamiento */}
-        <div className="pregunta-grupo">
-          <span className="campo-label">¿Tiene enfermedades crónicas?</span>
-          <div className="opciones-siNo">
-            <label className="opcion-radio">
-              <input
-                type="radio"
-                name="cronicas"
-                checked={tieneCronicas === true}
-                onChange={() => setTieneCronicas(true)}
+            {/* ¿Tiene enfermedades crónicas? Mismo comportamiento */}
+            <Radio.Group label="¿Tiene enfermedades crónicas?" {...form.getInputProps('tieneCronicas')}>
+              <Group mt={6}>
+                <Radio value="si" label="Sí" />
+                <Radio value="no" label="No" />
+              </Group>
+            </Radio.Group>
+            {form.values.tieneCronicas === 'si' && (
+              <Textarea
+                autosize
+                minRows={2}
+                placeholder="¿Cuáles? (ej. asma, diabetes)"
+                {...form.getInputProps('enfermedadesCronicas')}
               />
-              Sí
-            </label>
-            <label className="opcion-radio">
-              <input
-                type="radio"
-                name="cronicas"
-                checked={tieneCronicas === false}
-                onChange={() => { setTieneCronicas(false); setEnfermedadesCronicas(''); }}
-              />
-              No
-            </label>
-          </div>
-        </div>
-        {tieneCronicas && (
-          <textarea
-            className="input textarea"
-            placeholder="¿Cuáles? (ej. asma, diabetes)"
-            value={enfermedadesCronicas}
-            onChange={(e) => setEnfermedadesCronicas(e.target.value)}
-          />
-        )}
+            )}
 
-        <button
-          className="btn"
-          type="button"
-          onClick={handleRegistrar}
-          disabled={cargando}
-        >
-          {cargando ? 'Guardando...' : 'Registrar paciente'}
-        </button>
-      </div>
+            <Button type="submit" fullWidth mt="sm" loading={cargando}>
+              Registrar paciente
+            </Button>
+          </Stack>
+        </form>
+      </Paper>
     </Layout>
   );
 }

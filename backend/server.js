@@ -26,8 +26,26 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 // Solo el frontend autorizado puede llamar a estos endpoints (datos médicos).
-// En desarrollo es el server de Vite; en producción se define FRONTEND_URL.
-app.use(cors({ origin: process.env.FRONTEND_URL || 'http://localhost:5173' }));
+// En producción se define FRONTEND_URL (se pueden poner varias, separadas
+// por coma). En desarrollo (sin FRONTEND_URL) se acepta cualquier puerto de
+// localhost, porque Vite cambia de puerto si el 5173 está ocupado.
+const origenesPermitidos = process.env.FRONTEND_URL
+    ? process.env.FRONTEND_URL.split(',').map((o) => o.trim())
+    : null;
+
+app.use(cors({
+    origin: (origen, callback) => {
+        // Peticiones sin cabecera Origin (curl, Postman, misma máquina)
+        if (!origen) return callback(null, true);
+
+        if (origenesPermitidos) {
+            return callback(null, origenesPermitidos.includes(origen));
+        }
+
+        const esLocal = /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origen);
+        callback(null, esLocal);
+    },
+}));
 
 // Esto le dice a Express que entienda JSON en las peticiones
 app.use(express.json());

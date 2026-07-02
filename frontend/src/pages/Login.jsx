@@ -1,80 +1,72 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import toast from 'react-hot-toast';
+import { Center, Paper, Title, TextInput, PasswordInput, Button, Stack } from '@mantine/core';
+import { useForm } from '@mantine/form';
 import { apiJson } from '../lib/api';
 import { guardarSesion, tomarAvisoSesion } from '../lib/auth';
+import { exito, error, aviso } from '../lib/avisos';
 
 export default function Login() {
   const navigate = useNavigate();
-
-  const [usuario, setUsuario] = useState('');
-  const [contrasenia, setContrasenia] = useState('');
   const [cargando, setCargando] = useState(false);
+
+  const form = useForm({
+    initialValues: { usuario: '', password: '' },
+    validate: {
+      usuario: (v) => (v.trim() ? null : 'Escribe tu usuario'),
+      password: (v) => (v ? null : 'Escribe tu contraseña'),
+    },
+  });
 
   // Si llegamos aquí porque la sesión expiró, mostramos el aviso una vez
   useEffect(() => {
-    const aviso = tomarAvisoSesion();
-    if (aviso) toast(aviso, { icon: '⏳' });
+    const pendiente = tomarAvisoSesion();
+    if (pendiente) aviso(pendiente);
   }, []);
 
-  const handleAcceder = async () => {
-    // Validación de campos vacíos
-    if (!usuario || !contrasenia) {
-      toast.error('Escribe tu usuario y contraseña');
-      return;
-    }
-
+  const handleAcceder = async ({ usuario, password }) => {
     setCargando(true);
-
     try {
       const datos = await apiJson('/login', {
         method: 'POST',
-        body: { usuario, password: contrasenia },
+        body: { usuario, password },
       });
 
       // Inicio de sesión correcto: guardamos el token, el nombre y el rol
       guardarSesion(datos);
-      toast.success(`Bienvenida, ${datos.nombre || usuario}`);
+      exito(`Bienvenida, ${datos.nombre || usuario}`);
       navigate('/dashboard');
-    } catch (error) {
-      toast.error(error.message);
+    } catch (e) {
+      error(e.message);
     } finally {
       setCargando(false);
     }
   };
 
   return (
-    <div className="login-container">
-      <div className="card">
-        <h2 className="card-title">Iniciar Sesión</h2>
+    <Center className="login-container">
+      <Paper shadow="md" radius="md" p={40} withBorder w="100%" maw={380}>
+        <Title order={3} ta="center" mb="lg">Iniciar Sesión</Title>
 
-        <input
-          className="input"
-          type="text"
-          placeholder="Usuario"
-          value={usuario}
-          onChange={(e) => setUsuario(e.target.value)}
-          onKeyDown={(e) => e.key === 'Enter' && handleAcceder()}
-        />
-
-        <input
-          className="input"
-          type="password"
-          placeholder="Contraseña"
-          value={contrasenia}
-          onChange={(e) => setContrasenia(e.target.value)}
-          onKeyDown={(e) => e.key === 'Enter' && handleAcceder()}
-        />
-
-        <button
-          className="btn"
-          type="button"
-          onClick={handleAcceder}
-          disabled={cargando}
-        >
-          {cargando ? 'Entrando...' : 'Acceder'}
-        </button>
-      </div>
-    </div>
+        {/* form real: el Enter envía desde cualquier campo */}
+        <form onSubmit={form.onSubmit(handleAcceder)}>
+          <Stack>
+            <TextInput
+              label="Usuario"
+              placeholder="Tu usuario"
+              {...form.getInputProps('usuario')}
+            />
+            <PasswordInput
+              label="Contraseña"
+              placeholder="Tu contraseña"
+              {...form.getInputProps('password')}
+            />
+            <Button type="submit" fullWidth mt="sm" loading={cargando}>
+              Acceder
+            </Button>
+          </Stack>
+        </form>
+      </Paper>
+    </Center>
   );
 }

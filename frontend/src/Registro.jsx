@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import toast from 'react-hot-toast';
 import { apiFetch } from './api';
 import Layout from './Layout';
 
@@ -11,8 +12,6 @@ export default function Registro() {
   const [correo, setCorreo] = useState('');
   const [contrasenia, setContrasenia] = useState('');
 
-  const [mensajeError, setMensajeError] = useState('');
-  const [mensajeExito, setMensajeExito] = useState('');
   const [cargando, setCargando] = useState(false);
 
   // Formato de correo válido (no cualquier texto)
@@ -21,19 +20,15 @@ export default function Registro() {
   const handleRegistrar = async () => {
     // Validación de campos vacíos
     if (!nombre || !usuario || !correo || !contrasenia) {
-      setMensajeError('Todos los campos son obligatorios');
-      setMensajeExito('');
+      toast.error('Todos los campos son obligatorios');
       return;
     }
 
     if (!correoValido) {
-      setMensajeError('Escribe un correo válido (ej. nombre@gmail.com)');
-      setMensajeExito('');
+      toast.error('Escribe un correo válido (ej. nombre@gmail.com)');
       return;
     }
 
-    setMensajeError('');
-    setMensajeExito('');
     setCargando(true);
 
     try {
@@ -48,15 +43,15 @@ export default function Registro() {
 
       if (!respuesta.ok) {
         // El backend manda 400 si el usuario/correo ya existen o faltan datos
-        setMensajeError(datos.mensaje || 'No se pudo registrar');
+        toast.error(datos.mensaje || 'No se pudo registrar');
         return;
       }
 
       // Enfermera creada: avisamos y regresamos al Dashboard (el admin sigue con sesión)
-      setMensajeExito('Enfermera creada correctamente. Redirigiendo...');
-      setTimeout(() => navigate('/dashboard'), 1500);
+      toast.success('Enfermera creada correctamente');
+      navigate('/dashboard');
     } catch (error) {
-      setMensajeError('No se pudo conectar con el servidor');
+      toast.error('No se pudo conectar con el servidor');
     } finally {
       setCargando(false);
     }
@@ -110,9 +105,6 @@ export default function Registro() {
         >
           {cargando ? 'Creando...' : 'Crear enfermera'}
         </button>
-
-        {mensajeError && <p className="error-text">{mensajeError}</p>}
-        {mensajeExito && <p className="success-text">{mensajeExito}</p>}
       </div>
     </Layout>
   );

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import toast from 'react-hot-toast';
 import { apiFetch } from './api';
 import Layout from './Layout';
 
@@ -9,7 +10,10 @@ export default function RegistrarPaciente() {
   const [nombre, setNombre] = useState('');
   // Solo guardamos los números; el prefijo "UP" es fijo (ej. UP240231)
   const [matriculaNum, setMatriculaNum] = useState('');
-  const [fechaNacimiento, setFechaNacimiento] = useState('');
+  // Fecha de nacimiento con tres desplegables (más intuitivo que el calendario)
+  const [dia, setDia] = useState('');
+  const [mes, setMes] = useState('');
+  const [anio, setAnio] = useState('');
   const [correo, setCorreo] = useState('');
   const [telefono, setTelefono] = useState('');
   // ¿Tiene alergias / enfermedades crónicas? Solo si es "Sí" se muestra el texto
@@ -18,40 +22,60 @@ export default function RegistrarPaciente() {
   const [tieneCronicas, setTieneCronicas] = useState(false);
   const [enfermedadesCronicas, setEnfermedadesCronicas] = useState('');
 
-  const [mensajeError, setMensajeError] = useState('');
   const [cargando, setCargando] = useState(false);
 
   // Formato de correo válido: algo@dominio.com (no cualquier texto)
   const correoValido = correo === '' || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(correo);
 
+  // Opciones para los desplegables de la fecha de nacimiento
+  const meses = [
+    'enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio',
+    'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre',
+  ];
+  const anioActual = new Date().getFullYear();
+  const anios = Array.from({ length: anioActual - 1919 }, (_, i) => anioActual - i);
+  // Días válidos según el mes y año elegidos (para no ofrecer 31 en febrero, etc.)
+  const diasEnMes = mes && anio ? new Date(Number(anio), Number(mes), 0).getDate() : 31;
+  const dias = Array.from({ length: diasEnMes }, (_, i) => i + 1);
+
   const handleRegistrar = async () => {
     // Nombre y matrícula son obligatorios; el resto es opcional
     if (!nombre || !matriculaNum) {
-      setMensajeError('El nombre y la matrícula son obligatorios');
+      toast.error('El nombre y la matrícula son obligatorios');
       return;
     }
 
     // El correo es opcional, pero si lo escriben debe tener formato válido
     if (!correoValido) {
-      setMensajeError('Escribe un correo válido (ej. nombre@gmail.com)');
+      toast.error('Escribe un correo válido (ej. nombre@gmail.com)');
       return;
     }
 
     // Si marcaron "Sí" pero no escribieron nada, pedimos el detalle
     if (tieneAlergias && !alergias.trim()) {
-      setMensajeError('Especifica las alergias o marca "No"');
+      toast.error('Especifica las alergias o marca "No"');
       return;
     }
     if (tieneCronicas && !enfermedadesCronicas.trim()) {
-      setMensajeError('Especifica las enfermedades crónicas o marca "No"');
+      toast.error('Especifica las enfermedades crónicas o marca "No"');
       return;
     }
 
-    setMensajeError('');
+    // La fecha es opcional, pero si empezaron a llenarla debe estar completa
+    if ((dia || mes || anio) && !(dia && mes && anio)) {
+      toast.error('Completa la fecha de nacimiento (día, mes y año)');
+      return;
+    }
+
     setCargando(true);
 
     // Reconstruimos la matrícula completa con el prefijo fijo "UP"
     const matricula = `UP${matriculaNum}`;
+
+    // Armamos la fecha en formato YYYY-MM-DD que espera el backend
+    const fechaNacimiento = dia && mes && anio
+      ? `${anio}-${String(mes).padStart(2, '0')}-${String(dia).padStart(2, '0')}`
+      : '';
 
     try {
       const respuesta = await apiFetch('/api/pacientes', {
@@ -72,14 +96,15 @@ export default function RegistrarPaciente() {
 
       if (!respuesta.ok) {
         // El backend manda 400 si la matrícula ya existe o faltan datos
-        setMensajeError(datos.mensaje || 'No se pudo registrar el paciente');
+        toast.error(datos.mensaje || 'No se pudo registrar el paciente');
         return;
       }
 
       // Al guardar, vamos directo al expediente del paciente nuevo
+      toast.success('Paciente registrado correctamente');
       navigate(`/expediente/${datos.id}`);
     } catch (error) {
-      setMensajeError('No se pudo conectar con el servidor');
+      toast.error('No se pudo conectar con el servidor');
     } finally {
       setCargando(false);
     }
@@ -111,13 +136,40 @@ export default function RegistrarPaciente() {
           />
         </div>
 
-        <input
-          className="login-input"
-          type="date"
-          placeholder="Fecha de nacimiento"
-          value={fechaNacimiento}
-          onChange={(e) => setFechaNacimiento(e.target.value)}
-        />
+        {/* Fecha de nacimiento con desplegables: más rápido que el calendario */}
+        <span className="campo-label">Fecha de nacimiento</span>
+        <div className="fecha-grupo">
+          <select
+            className="login-input"
+            value={dia}
+            onChange={(e) => setDia(e.target.value)}
+          >
+            <option value="">Día</option>
+            {dias.map((d) => (
+              <option key={d} value={d}>{d}</option>
+            ))}
+          </select>
+          <select
+            className="login-input"
+            value={mes}
+            onChange={(e) => setMes(e.target.value)}
+          >
+            <option value="">Mes</option>
+            {meses.map((nombreMes, i) => (
+              <option key={nombreMes} value={i + 1}>{nombreMes}</option>
+            ))}
+          </select>
+          <select
+            className="login-input"
+            value={anio}
+            onChange={(e) => setAnio(e.target.value)}
+          >
+            <option value="">Año</option>
+            {anios.map((a) => (
+              <option key={a} value={a}>{a}</option>
+            ))}
+          </select>
+        </div>
 
         <input
           className={`login-input ${!correoValido ? 'input-error' : ''}`}
@@ -214,8 +266,6 @@ export default function RegistrarPaciente() {
         >
           {cargando ? 'Guardando...' : 'Registrar paciente'}
         </button>
-
-        {mensajeError && <p className="error-text">{mensajeError}</p>}
       </div>
     </Layout>
   );

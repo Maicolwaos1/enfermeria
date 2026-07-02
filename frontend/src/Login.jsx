@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import toast from 'react-hot-toast';
 import { API_URL } from './api';
 
 export default function Login() {
@@ -7,16 +8,13 @@ export default function Login() {
 
   const [usuario, setUsuario] = useState('');
   const [contrasenia, setContrasenia] = useState('');
-
-  const [mensajeError, setMensajeError] = useState('');
-  const [mensajeAviso, setMensajeAviso] = useState('');
   const [cargando, setCargando] = useState(false);
 
   // Si llegamos aquí porque la sesión expiró, mostramos el aviso una vez
   useEffect(() => {
     const aviso = localStorage.getItem('avisoSesion');
     if (aviso) {
-      setMensajeAviso(aviso);
+      toast(aviso, { icon: '⏳' });
       localStorage.removeItem('avisoSesion');
     }
   }, []);
@@ -24,11 +22,10 @@ export default function Login() {
   const handleAcceder = async () => {
     // Validación de campos vacíos
     if (!usuario || !contrasenia) {
-      setMensajeError('Escribe tu usuario y contraseña');
+      toast.error('Escribe tu usuario y contraseña');
       return;
     }
 
-    setMensajeError('');
     setCargando(true);
 
     try {
@@ -43,7 +40,7 @@ export default function Login() {
 
       if (!respuesta.ok) {
         // El backend manda 401 si el usuario o contraseña son incorrectos
-        setMensajeError(datos.mensaje || 'Usuario o contraseña incorrectos');
+        toast.error(datos.mensaje || 'Usuario o contraseña incorrectos');
         return;
       }
 
@@ -51,9 +48,10 @@ export default function Login() {
       localStorage.setItem('token', datos.token || '');
       localStorage.setItem('nombreEnfermera', datos.nombre || usuario);
       localStorage.setItem('rolEnfermera', datos.rol || 'enfermera');
+      toast.success(`Bienvenida, ${datos.nombre || usuario}`);
       navigate('/dashboard');
     } catch (error) {
-      setMensajeError('Usuario o contraseña incorrecta');
+      toast.error('No se pudo conectar con el servidor');
     } finally {
       setCargando(false);
     }
@@ -70,6 +68,7 @@ export default function Login() {
           placeholder="Usuario"
           value={usuario}
           onChange={(e) => setUsuario(e.target.value)}
+          onKeyDown={(e) => e.key === 'Enter' && handleAcceder()}
         />
 
         <input
@@ -78,6 +77,7 @@ export default function Login() {
           placeholder="Contraseña"
           value={contrasenia}
           onChange={(e) => setContrasenia(e.target.value)}
+          onKeyDown={(e) => e.key === 'Enter' && handleAcceder()}
         />
 
         <button
@@ -88,9 +88,6 @@ export default function Login() {
         >
           {cargando ? 'Entrando...' : 'Acceder'}
         </button>
-
-        {mensajeAviso && <p className="aviso-text">{mensajeAviso}</p>}
-        {mensajeError && <p className="error-text">{mensajeError}</p>}
       </div>
     </div>
   );

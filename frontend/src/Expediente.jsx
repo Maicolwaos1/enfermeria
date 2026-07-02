@@ -1,8 +1,18 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { TriangleAlert } from 'lucide-react';
+import toast from 'react-hot-toast';
 import { apiFetch } from './api';
 import Layout from './Layout';
+
+// Muestra la fecha de nacimiento como día/mes/año (sin la hora que trae el ISO)
+function formatearFecha(valor) {
+  if (!valor) return 'No registrada';
+  const soloFecha = String(valor).slice(0, 10); // "2006-08-02T05:00:00.000Z" -> "2006-08-02"
+  const [anio, mes, dia] = soloFecha.split('-');
+  if (!anio || !mes || !dia) return valor;
+  return `${dia}/${mes}/${anio}`;
+}
 
 export default function Expediente() {
   const { id } = useParams();      // el id del paciente viene en la URL
@@ -64,7 +74,7 @@ export default function Expediente() {
       const datos = await respuesta.json();
 
       if (!respuesta.ok) {
-        setMensajeError(datos.mensaje || 'No se pudieron guardar las alergias');
+        toast.error(datos.mensaje || 'No se pudieron guardar las alergias');
         return;
       }
 
@@ -75,8 +85,9 @@ export default function Expediente() {
         enfermedades_cronicas: enfermedadesCronicas,
       });
       setEditando(false);
+      toast.success('Alergias actualizadas');
     } catch (error) {
-      setMensajeError('No se pudo conectar con el servidor');
+      toast.error('No se pudo conectar con el servidor');
     } finally {
       setGuardando(false);
     }
@@ -112,7 +123,7 @@ export default function Expediente() {
         <div className="expediente-datos">
           <p><strong>Nombre:</strong> {paciente.nombre}</p>
           <p><strong>Matrícula:</strong> {paciente.matricula}</p>
-          <p><strong>Fecha de nacimiento:</strong> {paciente.fecha_nacimiento || 'No registrada'}</p>
+          <p><strong>Fecha de nacimiento:</strong> {formatearFecha(paciente.fecha_nacimiento)}</p>
           <p><strong>Correo:</strong> {paciente.correo || 'No registrado'}</p>
           <p><strong>Teléfono:</strong> {paciente.telefono || 'No registrado'}</p>
         </div>
@@ -175,7 +186,6 @@ export default function Expediente() {
             >
               Cancelar
             </button>
-            {mensajeError && <p className="error-text">{mensajeError}</p>}
           </div>
         ) : (
           <button

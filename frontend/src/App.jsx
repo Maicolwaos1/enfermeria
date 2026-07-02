@@ -1,4 +1,5 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { Toaster } from 'react-hot-toast';
 import Login from './Login';
 import Registro from './Registro';
 import Dashboard from './Dashboard';
@@ -10,6 +11,15 @@ import RutaProtegida from './RutaProtegida';
 export default function App() {
   return (
     <BrowserRouter>
+      {/* Notificaciones tipo toast, disponibles en toda la app */}
+      <Toaster
+        position="top-center"
+        toastOptions={{
+          duration: 3000,
+          style: { fontFamily: 'Poppins, Arial, sans-serif', fontSize: '15px' },
+          success: { iconTheme: { primary: '#2563eb', secondary: '#fff' } },
+        }}
+      />
       <Routes>
         {/* Rutas públicas */}
         <Route path="/" element={<Login />} />

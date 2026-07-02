@@ -13,11 +13,21 @@ const { verificarToken } = require('./middlewares/auth');
 const authRoutes = require('./routes/auth.routes');
 const pacientesRoutes = require('./routes/pacientes.routes');
 
+// Si faltan variables críticas del .env es mejor no arrancar: sin JWT_SECRET
+// los tokens no se pueden firmar/verificar y todo fallaría a media petición.
+const VARIABLES_REQUERIDAS = ['JWT_SECRET', 'DB_HOST', 'DB_USER', 'DB_NAME'];
+const faltantes = VARIABLES_REQUERIDAS.filter((v) => !process.env[v]);
+if (faltantes.length > 0) {
+    console.error(`Faltan variables en el .env: ${faltantes.join(', ')}. El servidor no puede arrancar.`);
+    process.exit(1);
+}
+
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Permite que el frontend (React/Vite) pueda llamar a estos endpoints
-app.use(cors());
+// Solo el frontend autorizado puede llamar a estos endpoints (datos médicos).
+// En desarrollo es el server de Vite; en producción se define FRONTEND_URL.
+app.use(cors({ origin: process.env.FRONTEND_URL || 'http://localhost:5173' }));
 
 // Esto le dice a Express que entienda JSON en las peticiones
 app.use(express.json());

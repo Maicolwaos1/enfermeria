@@ -220,9 +220,30 @@ body {
   background: linear-gradient(90deg, var(--primary-darker), var(--primary-dark));
   color: #ffffff;
   padding: 0 24px;
-  height: 62px;
+  height: 100%; /* la altura la pone el AppShell.Header (62px) */
   box-shadow: 0 2px 10px rgba(37, 99, 235, 0.25);
-  flex-wrap: wrap;
+}
+
+/* En pantallas chicas los enlaces viven en el Drawer (hamburguesa) */
+@media (max-width: 48em) {
+  .navbar { padding: 0 14px; gap: 10px; }
+  .navbar-links { display: none; }
+}
+
+/* Enlaces dentro del panel móvil */
+.navbar-link-movil {
+  display: block;
+  padding: 12px 14px;
+  border-radius: 8px;
+  color: var(--text);
+  text-decoration: none;
+  font-size: 16px;
+}
+
+.navbar-link-movil.active {
+  background-color: var(--primary-light);
+  color: var(--primary-dark);
+  font-weight: 600;
 }
 
 .navbar-brand {

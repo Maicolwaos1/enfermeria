@@ -1,12 +1,15 @@
+import { AppShell } from '@mantine/core';
 import Navbar from './Navbar';
 
-// Envoltura visual de las pantallas internas: pone la Navbar arriba y centra
-// el contenido debajo. La protección de sesión la hace RutaProtegida (App.jsx).
+// Envoltura de las pantallas internas: Navbar fija arriba y el contenido
+// centrado debajo. La protección de sesión la hace RutaProtegida (App.jsx).
 export default function Layout({ children }) {
   return (
-    <div className="app-shell">
-      <Navbar />
-      <main className="page-content">{children}</main>
-    </div>
+    <AppShell header={{ height: 62 }}>
+      <AppShell.Header withBorder={false}>
+        <Navbar />
+      </AppShell.Header>
+      <AppShell.Main className="page-content">{children}</AppShell.Main>
+    </AppShell>
   );
 }

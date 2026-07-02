@@ -59,6 +59,7 @@ async function obtenerExpediente(req, res, next) {
 // POST /api/pacientes — Registrar un paciente nuevo manualmente.
 // Recibe: nombre, matricula, fecha_nacimiento, correo, telefono,
 //         alergias, enfermedades_cronicas.
+// Los formatos ya vienen validados por validaciones/pacientes.js en la ruta.
 async function registrar(req, res, next) {
     const {
         nombre,
@@ -69,11 +70,6 @@ async function registrar(req, res, next) {
         alergias,
         enfermedades_cronicas,
     } = req.body;
-
-    // Nombre y matrícula son obligatorios; el resto puede quedar vacío
-    if (!nombre || !matricula) {
-        return res.status(400).json({ mensaje: 'El nombre y la matrícula son obligatorios' });
-    }
 
     const sql = `
         INSERT INTO pacientes

@@ -2,13 +2,19 @@
 // pasan antes por verificarToken (el middleware se aplica a todo /api).
 const router = require('express').Router();
 const ctrl = require('../controllers/pacientes.controller');
+const validar = require('../middlewares/validar');
+const {
+    validarPacienteNuevo,
+    validarAlergias,
+    validarIdPaciente,
+} = require('../validaciones/pacientes');
 
 // Sprint 3 — buscar por matrícula y ver expediente
 router.get('/:matricula', ctrl.buscarPorMatricula);
-router.get('/:id/expediente', ctrl.obtenerExpediente);
+router.get('/:id/expediente', validarIdPaciente, validar, ctrl.obtenerExpediente);
 
 // Sprint 4 — registrar paciente nuevo y editar alergias
-router.post('/', ctrl.registrar);
-router.patch('/:id/alergias', ctrl.actualizarAlergias);
+router.post('/', validarPacienteNuevo, validar, ctrl.registrar);
+router.patch('/:id/alergias', validarIdPaciente, validarAlergias, validar, ctrl.actualizarAlergias);
 
 module.exports = router;

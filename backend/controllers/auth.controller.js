@@ -7,13 +7,9 @@ const JWT_SECRET = process.env.JWT_SECRET;
 
 // POST /registro — Registrar una enfermera (solo admin).
 // Recibe: nombre, usuario, password, correo.
-// Guarda los datos en la tabla enfermeras (con la contraseña encriptada).
+// Los formatos ya vienen validados por validaciones/auth.js en la ruta.
 async function registrarEnfermera(req, res, next) {
     const { nombre, usuario, password, correo } = req.body;
-
-    if (!nombre || !usuario || !password || !correo) {
-        return res.status(400).json({ mensaje: 'Todos los campos son obligatorios' });
-    }
 
     try {
         // Encriptar la contraseña antes de guardarla.

@@ -52,6 +52,10 @@ app.use('/api/pacientes', pacientesRoutes);
 // un handler async) termina aquí: se registra completo en la consola
 // y al cliente solo se le responde un mensaje genérico.
 app.use((error, req, res, next) => {
+    // JSON malformado en el body: es culpa del cliente, no del servidor
+    if (error.type === 'entity.parse.failed') {
+        return res.status(400).json({ mensaje: 'El cuerpo de la petición no es JSON válido' });
+    }
     console.error(error);
     res.status(500).json({ mensaje: 'Error en el servidor' });
 });

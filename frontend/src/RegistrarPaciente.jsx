@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
-import { apiFetch } from './api';
+import { apiJson } from './lib/api';
+import { esCorreoValido, esMatriculaValida, MAX_DIGITOS_MATRICULA } from './lib/validaciones';
 import Layout from './Layout';
 
 export default function RegistrarPaciente() {
@@ -24,8 +25,7 @@ export default function RegistrarPaciente() {
 
   const [cargando, setCargando] = useState(false);
 
-  // Formato de correo válido: algo@dominio.com (no cualquier texto)
-  const correoValido = correo === '' || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(correo);
+  const correoValido = esCorreoValido(correo);
 
   // Opciones para los desplegables de la fecha de nacimiento
   const meses = [
@@ -42,6 +42,12 @@ export default function RegistrarPaciente() {
     // Nombre y matrícula son obligatorios; el resto es opcional
     if (!nombre || !matriculaNum) {
       toast.error('El nombre y la matrícula son obligatorios');
+      return;
+    }
+
+    // Misma regla que el backend: UP + 4 a 10 dígitos
+    if (!esMatriculaValida(matriculaNum)) {
+      toast.error('La matrícula debe tener de 4 a 10 dígitos');
       return;
     }
 
@@ -78,10 +84,9 @@ export default function RegistrarPaciente() {
       : '';
 
     try {
-      const respuesta = await apiFetch('/api/pacientes', {
+      const datos = await apiJson('/api/pacientes', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
+        body: {
           nombre,
           matricula,
           fecha_nacimiento: fechaNacimiento,
@@ -89,22 +94,14 @@ export default function RegistrarPaciente() {
           telefono,
           alergias,
           enfermedades_cronicas: enfermedadesCronicas,
-        }),
+        },
       });
-
-      const datos = await respuesta.json();
-
-      if (!respuesta.ok) {
-        // El backend manda 400 si la matrícula ya existe o faltan datos
-        toast.error(datos.mensaje || 'No se pudo registrar el paciente');
-        return;
-      }
 
       // Al guardar, vamos directo al expediente del paciente nuevo
       toast.success('Paciente registrado correctamente');
       navigate(`/expediente/${datos.id}`);
     } catch (error) {
-      toast.error('No se pudo conectar con el servidor');
+      toast.error(error.message);
     } finally {
       setCargando(false);
     }
@@ -130,6 +127,7 @@ export default function RegistrarPaciente() {
             className="login-input input-con-prefijo"
             type="text"
             inputMode="numeric"
+            maxLength={MAX_DIGITOS_MATRICULA}
             placeholder="240231"
             value={matriculaNum}
             onChange={(e) => setMatriculaNum(e.target.value.replace(/\D/g, ''))}
@@ -185,9 +183,10 @@ export default function RegistrarPaciente() {
         <input
           className="login-input"
           type="tel"
-          placeholder="Teléfono"
+          placeholder="Teléfono (10 dígitos)"
+          maxLength={10}
           value={telefono}
-          onChange={(e) => setTelefono(e.target.value)}
+          onChange={(e) => setTelefono(e.target.value.replace(/\D/g, ''))}
         />
 
         {/* ¿Tiene alergias? Solo si es "Sí" se muestra el campo de texto */}

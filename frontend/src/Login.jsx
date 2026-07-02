@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
-import { API_URL } from './api';
+import { apiJson } from './lib/api';
+import { guardarSesion, tomarAvisoSesion } from './lib/auth';
 
 export default function Login() {
   const navigate = useNavigate();
@@ -12,11 +13,8 @@ export default function Login() {
 
   // Si llegamos aquí porque la sesión expiró, mostramos el aviso una vez
   useEffect(() => {
-    const aviso = localStorage.getItem('avisoSesion');
-    if (aviso) {
-      toast(aviso, { icon: '⏳' });
-      localStorage.removeItem('avisoSesion');
-    }
+    const aviso = tomarAvisoSesion();
+    if (aviso) toast(aviso, { icon: '⏳' });
   }, []);
 
   const handleAcceder = async () => {
@@ -29,29 +27,17 @@ export default function Login() {
     setCargando(true);
 
     try {
-      // Llamada al endpoint POST /login del backend
-      const respuesta = await fetch(`${API_URL}/login`, {
+      const datos = await apiJson('/login', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ usuario, password: contrasenia }),
+        body: { usuario, password: contrasenia },
       });
 
-      const datos = await respuesta.json();
-
-      if (!respuesta.ok) {
-        // El backend manda 401 si el usuario o contraseña son incorrectos
-        toast.error(datos.mensaje || 'Usuario o contraseña incorrectos');
-        return;
-      }
-
       // Inicio de sesión correcto: guardamos el token, el nombre y el rol
-      localStorage.setItem('token', datos.token || '');
-      localStorage.setItem('nombreEnfermera', datos.nombre || usuario);
-      localStorage.setItem('rolEnfermera', datos.rol || 'enfermera');
+      guardarSesion(datos);
       toast.success(`Bienvenida, ${datos.nombre || usuario}`);
       navigate('/dashboard');
     } catch (error) {
-      toast.error('No se pudo conectar con el servidor');
+      toast.error(error.message);
     } finally {
       setCargando(false);
     }

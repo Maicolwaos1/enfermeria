@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { TriangleAlert } from 'lucide-react';
 import toast from 'react-hot-toast';
-import { apiFetch } from './api';
+import { apiJson } from './lib/api';
 import Layout from './Layout';
 
 // Muestra la fecha de nacimiento como día/mes/año (sin la hora que trae el ISO)
@@ -32,18 +32,11 @@ export default function Expediente() {
   useEffect(() => {
     const cargarExpediente = async () => {
       try {
-        const respuesta = await apiFetch(`/api/pacientes/${id}/expediente`);
-        const datos = await respuesta.json();
-
-        if (!respuesta.ok) {
-          setMensajeError(datos.mensaje || 'No se pudo cargar el expediente');
-          return;
-        }
-
+        const datos = await apiJson(`/api/pacientes/${id}/expediente`);
         setPaciente(datos.paciente);
         setConsultas(datos.consultas || []);
       } catch (error) {
-        setMensajeError('No se pudo conectar con el servidor');
+        setMensajeError(error.message);
       } finally {
         setCargando(false);
       }
@@ -62,21 +55,13 @@ export default function Expediente() {
   const guardarAlergias = async () => {
     setGuardando(true);
     try {
-      const respuesta = await apiFetch(`/api/pacientes/${id}/alergias`, {
+      await apiJson(`/api/pacientes/${id}/alergias`, {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
+        body: {
           alergias,
           enfermedades_cronicas: enfermedadesCronicas,
-        }),
+        },
       });
-
-      const datos = await respuesta.json();
-
-      if (!respuesta.ok) {
-        toast.error(datos.mensaje || 'No se pudieron guardar las alergias');
-        return;
-      }
 
       // Reflejar los cambios en pantalla sin recargar
       setPaciente({
@@ -87,7 +72,7 @@ export default function Expediente() {
       setEditando(false);
       toast.success('Alergias actualizadas');
     } catch (error) {
-      toast.error('No se pudo conectar con el servidor');
+      toast.error(error.message);
     } finally {
       setGuardando(false);
     }

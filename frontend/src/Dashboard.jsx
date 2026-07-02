@@ -1,11 +1,12 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Search, UserPlus, Package } from 'lucide-react';
+import { obtenerSesion } from './lib/auth';
 import Layout from './Layout';
 
 export default function Dashboard() {
   const navigate = useNavigate();
-  const nombre = localStorage.getItem('nombreEnfermera') || '';
+  const { nombre } = obtenerSesion();
 
   return (
     <Layout>

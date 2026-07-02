@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
-import { apiFetch } from './api';
+import { apiJson } from './lib/api';
+import { MAX_DIGITOS_MATRICULA } from './lib/validaciones';
 import Layout from './Layout';
 
 export default function BuscarPaciente() {
@@ -23,23 +24,13 @@ export default function BuscarPaciente() {
     setNoEncontrado(false);
     setCargando(true);
 
-    // Reconstruimos la matrícula completa con el prefijo fijo "UP"
-    const matricula = `UP${matriculaNum}`;
-
     try {
-      const respuesta = await apiFetch(`/api/pacientes/${matricula}`);
-      const datos = await respuesta.json();
-
-      if (!respuesta.ok) {
-        // El backend manda 404 si no encuentra al paciente
-        toast.error(datos.mensaje || 'Paciente no encontrado');
-        setNoEncontrado(true);
-        return;
-      }
-
+      // Reconstruimos la matrícula completa con el prefijo fijo "UP"
+      const datos = await apiJson(`/api/pacientes/UP${matriculaNum}`);
       setPaciente(datos);
     } catch (error) {
-      toast.error('No se pudo conectar con el servidor');
+      toast.error(error.message);
+      if (error.status === 404) setNoEncontrado(true);
     } finally {
       setCargando(false);
     }
@@ -57,6 +48,7 @@ export default function BuscarPaciente() {
             className="login-input input-con-prefijo"
             type="text"
             inputMode="numeric"
+            maxLength={MAX_DIGITOS_MATRICULA}
             placeholder="240231"
             value={matriculaNum}
             onChange={(e) => setMatriculaNum(e.target.value.replace(/\D/g, ''))}

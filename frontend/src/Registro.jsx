@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
-import { apiFetch } from './api';
+import { apiJson } from './lib/api';
+import { esCorreoValido, MIN_PASSWORD } from './lib/validaciones';
 import Layout from './Layout';
 
 export default function Registro() {
@@ -14,8 +15,7 @@ export default function Registro() {
 
   const [cargando, setCargando] = useState(false);
 
-  // Formato de correo válido (no cualquier texto)
-  const correoValido = correo === '' || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(correo);
+  const correoValido = esCorreoValido(correo);
 
   const handleRegistrar = async () => {
     // Validación de campos vacíos
@@ -29,29 +29,26 @@ export default function Registro() {
       return;
     }
 
+    // Misma regla que el backend: mínimo 8 caracteres
+    if (contrasenia.length < MIN_PASSWORD) {
+      toast.error(`La contraseña debe tener al menos ${MIN_PASSWORD} caracteres`);
+      return;
+    }
+
     setCargando(true);
 
     try {
-      // Llamada al endpoint POST /registro del backend (requiere token de admin)
-      const respuesta = await apiFetch('/registro', {
+      // Endpoint POST /registro del backend (requiere token de admin)
+      await apiJson('/registro', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ nombre, usuario, correo, password: contrasenia }),
+        body: { nombre, usuario, correo, password: contrasenia },
       });
-
-      const datos = await respuesta.json();
-
-      if (!respuesta.ok) {
-        // El backend manda 400 si el usuario/correo ya existen o faltan datos
-        toast.error(datos.mensaje || 'No se pudo registrar');
-        return;
-      }
 
       // Enfermera creada: avisamos y regresamos al Dashboard (el admin sigue con sesión)
       toast.success('Enfermera creada correctamente');
       navigate('/dashboard');
     } catch (error) {
-      toast.error('No se pudo conectar con el servidor');
+      toast.error(error.message);
     } finally {
       setCargando(false);
     }
@@ -92,7 +89,7 @@ export default function Registro() {
         <input
           className="login-input"
           type="password"
-          placeholder="Contraseña"
+          placeholder={`Contraseña (mínimo ${MIN_PASSWORD} caracteres)`}
           value={contrasenia}
           onChange={(e) => setContrasenia(e.target.value)}
         />

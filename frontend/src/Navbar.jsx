@@ -1,15 +1,13 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { Stethoscope, CircleUser, ChevronDown, UserPlus, RefreshCw, LogOut } from 'lucide-react';
-import { limpiarSesion } from './api';
+import { obtenerSesion, cerrarSesion } from './lib/auth';
 
 // Barra de navegación fija que aparece en todas las pantallas internas
 // (Dashboard, Buscar, Registrar, Expediente).
 export default function Navbar() {
   const navigate = useNavigate();
-  const nombre = localStorage.getItem('nombreEnfermera') || '';
-  const rol = localStorage.getItem('rolEnfermera') || 'enfermera';
-  const esAdmin = rol === 'admin';
+  const { nombre, esAdmin } = obtenerSesion();
 
   const [menuAbierto, setMenuAbierto] = useState(false);
   const menuRef = useRef(null);
@@ -27,7 +25,7 @@ export default function Navbar() {
 
   // Borra la sesión y regresa al Login (sirve para "Cambiar usuario" y "Cerrar sesión")
   const salir = () => {
-    limpiarSesion();
+    cerrarSesion();
     navigate('/');
   };
 
